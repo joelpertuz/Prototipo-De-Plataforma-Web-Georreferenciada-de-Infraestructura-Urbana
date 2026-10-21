@@ -1,0 +1,19 @@
+{
+  "name": "plataforma-vial-sas-backend",
+  "version": "1.0.0",
+  "description": "API REST - Plataforma Vial y Alumbrado, San Andrés de Sotavento",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.12.0",
+    "uuid": "^14.0.3"
+  }
+}

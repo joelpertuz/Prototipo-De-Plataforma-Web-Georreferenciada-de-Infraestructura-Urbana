@@ -1,0 +1,569 @@
+.main-consulta {
+  --consulta-bg: #090d16;
+  --consulta-surface: rgba(15, 23, 42, 0.94);
+  --consulta-card: rgba(18, 26, 47, 0.96);
+  --consulta-border: rgba(56, 189, 248, 0.24);
+  --consulta-cyan: #00f0ff;
+  --consulta-blue: #38bdf8;
+  --consulta-text: #f1f5f9;
+  --consulta-muted: #94a3b8;
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
+  padding: 38px clamp(18px, 4vw, 48px) 56px;
+  color: var(--consulta-text);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(0, 240, 255, 0.08), transparent 44%),
+    var(--consulta-bg);
+}
+
+.main-consulta .consulta-encabezado,
+.main-consulta .consulta-panel,
+.main-consulta .tarjeta,
+.main-consulta .volver {
+  width: 100%;
+  max-width: 760px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.main-consulta .consulta-encabezado {
+  margin-bottom: 24px;
+}
+
+.main-consulta .consulta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--consulta-cyan);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+}
+
+.main-consulta .consulta-badge-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--consulta-cyan);
+  box-shadow: 0 0 9px var(--consulta-cyan);
+}
+
+.main-consulta .consulta-encabezado h1 {
+  margin: 12px 0 4px;
+  color: #fff;
+  font-size: clamp(25px, 3vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+}
+
+.main-consulta .consulta-encabezado > p {
+  margin: 0;
+  color: var(--consulta-muted);
+  font-size: 14px;
+}
+
+.main-consulta .consulta-panel,
+.main-consulta .tarjeta {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--consulta-border);
+  border-radius: 14px;
+  background: var(--consulta-surface);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 0 22px rgba(0, 240, 255, 0.06);
+}
+
+.main-consulta .consulta-panel::before,
+.main-consulta .tarjeta::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--consulta-cyan), transparent);
+  content: '';
+}
+
+.main-consulta .consulta-card-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 22px 15px;
+}
+
+.main-consulta .consulta-card-titulo h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.main-consulta .consulta-card-titulo p {
+  margin: 4px 0 0;
+  color: var(--consulta-muted);
+  font-size: 12.5px;
+}
+
+.main-consulta .consulta-etiqueta,
+.main-consulta .resultado-etiqueta {
+  flex: none;
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 5px;
+  background: rgba(0, 240, 255, 0.08);
+  color: var(--consulta-cyan);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.main-consulta .consulta-panel form {
+  padding: 0 22px 20px;
+}
+
+.main-consulta .consulta-panel label {
+  display: block;
+  margin-bottom: 7px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+.main-consulta .fila {
+  display: flex;
+  gap: 10px;
+}
+
+.main-consulta input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--consulta-border);
+  border-radius: 8px;
+  background: rgba(11, 15, 25, 0.88);
+  color: var(--consulta-text);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 15px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.main-consulta input[type="text"]::placeholder {
+  color: rgba(148, 163, 184, 0.58);
+}
+
+.main-consulta input[type="text"]:focus {
+  border-color: var(--consulta-cyan);
+  outline: none;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.18);
+}
+
+.main-consulta .btn-consultar {
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0284c7, #00d9e8);
+  box-shadow: 0 4px 18px rgba(0, 240, 255, 0.18);
+  color: #07111b;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.main-consulta .btn-consultar:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.main-consulta .btn-consultar:disabled {
+  background: #334155;
+  box-shadow: none;
+  color: #94a3b8;
+  cursor: wait;
+}
+
+.main-consulta .ayuda {
+  margin: 8px 0 0;
+  color: var(--consulta-muted);
+  font-size: 11.5px;
+}
+
+.main-consulta .mensaje {
+  margin: 0 22px 20px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  border-radius: 8px;
+  background: rgba(255, 51, 102, 0.12);
+  box-shadow: 0 0 12px rgba(255, 51, 102, 0.1);
+  color: #ff7b95;
+  font-size: 13px;
+}
+
+.main-consulta .tarjeta {
+  margin-top: 18px;
+  padding: 22px;
+}
+
+.main-consulta .tarjeta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.main-consulta .resultado-etiqueta {
+  display: inline-block;
+  margin-bottom: 8px;
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+}
+
+.main-consulta .codigo {
+  margin: 0;
+  color: var(--consulta-cyan);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.main-consulta .tipo {
+  margin: 4px 0 0;
+  color: var(--consulta-muted);
+  font-size: 13px;
+}
+
+.main-consulta .estado-actual {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--estado-color) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--estado-color) 14%, transparent);
+  color: var(--estado-color);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.main-consulta .progreso-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 16px;
+}
+
+.main-consulta .progreso-heading h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.main-consulta .progreso-heading span {
+  color: var(--consulta-muted);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 10px;
+}
+
+.main-consulta .pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.main-consulta .paso {
+  position: relative;
+  display: flex;
+  gap: 13px;
+  min-height: 48px;
+  padding: 0 0 18px;
+}
+
+.main-consulta .paso:last-child {
+  min-height: 26px;
+  padding-bottom: 0;
+}
+
+.main-consulta .paso::before {
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  left: 12px;
+  width: 2px;
+  background: rgba(148, 163, 184, 0.22);
+  content: '';
+}
+
+.main-consulta .paso:last-child::before {
+  display: none;
+}
+
+.main-consulta .paso.hecho::before {
+  background: var(--color);
+  opacity: 0.7;
+}
+
+.main-consulta .marca {
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgba(148, 163, 184, 0.32);
+  border-radius: 50%;
+  background: #111827;
+  color: #07111b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.main-consulta .paso.hecho .marca {
+  border-color: var(--color);
+  background: var(--color);
+}
+
+.main-consulta .paso.actual .marca {
+  border-color: var(--color);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color) 18%, transparent);
+}
+
+.main-consulta .paso.actual .marca::after {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color);
+  content: '';
+}
+
+.main-consulta .paso-contenido {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.main-consulta .paso .titulo {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.main-consulta .paso.hecho .titulo,
+.main-consulta .paso.actual .titulo {
+  color: var(--consulta-text);
+}
+
+.main-consulta .paso.actual .titulo {
+  font-weight: 700;
+}
+
+.main-consulta .paso-actual-tag {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--color) 40%, transparent);
+  border-radius: 4px;
+  color: var(--color);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 8px;
+  letter-spacing: 0.3px;
+  vertical-align: 1px;
+}
+
+.main-consulta .paso .detalle {
+  margin: 4px 0 0;
+  color: var(--consulta-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.main-consulta .fechas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.main-consulta .fechas p {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  color: var(--consulta-muted);
+  font-size: 11px;
+}
+
+.main-consulta .fechas strong {
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.main-consulta .cierre {
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.main-consulta .cierre-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+
+.main-consulta .cierre-indicador {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 9px rgba(52, 211, 153, 0.7);
+}
+
+.main-consulta .cierre h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+}
+
+.main-consulta .cierre-heading p {
+  margin: 3px 0 0;
+  color: var(--consulta-muted);
+  font-size: 11.5px;
+}
+
+.main-consulta .fotos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.main-consulta .fotos.una {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.main-consulta .fotos figure {
+  min-width: 0;
+  margin: 0;
+}
+
+.main-consulta .fotos a {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--consulta-border);
+  border-radius: 8px;
+  background: #0b0f19;
+}
+
+.main-consulta .fotos img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.main-consulta .fotos a:hover img {
+  transform: scale(1.03);
+}
+
+.main-consulta .fotos figcaption {
+  margin-top: 6px;
+  color: var(--consulta-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.main-consulta .volver {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.main-consulta .volver a {
+  color: var(--consulta-blue);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.main-consulta .volver a:hover {
+  color: var(--consulta-cyan);
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .main-consulta {
+    padding: 27px 14px 38px;
+  }
+
+  .main-consulta .consulta-card-titulo {
+    align-items: flex-start;
+    padding: 17px 16px 13px;
+  }
+
+  .main-consulta .consulta-etiqueta {
+    display: none;
+  }
+
+  .main-consulta .consulta-panel form {
+    padding: 0 16px 17px;
+  }
+
+  .main-consulta .fila {
+    flex-direction: column;
+  }
+
+  .main-consulta .btn-consultar {
+    width: 100%;
+  }
+
+  .main-consulta .mensaje {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .main-consulta .tarjeta {
+    padding: 17px 16px;
+  }
+
+  .main-consulta .tarjeta-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .main-consulta .fechas {
+    grid-template-columns: 1fr;
+  }
+
+  .main-consulta .fotos {
+    grid-template-columns: 1fr;
+  }
+
+  .main-consulta .fotos img {
+    height: 200px;
+  }
+}

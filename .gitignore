@@ -1,0 +1,19 @@
+# Dependencies and generated output
+**/node_modules/
+frontend/dist/
+
+# Local environment variables
+**/.env
+**/.env.*
+!**/.env.example
+
+# Uploaded user files
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs and OS/editor files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

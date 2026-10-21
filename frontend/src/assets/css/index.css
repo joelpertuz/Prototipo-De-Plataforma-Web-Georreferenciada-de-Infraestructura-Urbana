@@ -1,0 +1,434 @@
+.vista-reporte {
+  --reporte-bg: #090d16;
+  --reporte-surface: rgba(15, 23, 42, 0.94);
+  --reporte-card: rgba(18, 26, 47, 0.96);
+  --reporte-border: rgba(56, 189, 248, 0.24);
+  --reporte-cyan: #00f0ff;
+  --reporte-blue: #38bdf8;
+  --reporte-text: #f1f5f9;
+  --reporte-muted: #94a3b8;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  padding: 38px clamp(18px, 4vw, 56px) 56px;
+  color: var(--reporte-text);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(0, 240, 255, 0.08), transparent 42%),
+    var(--reporte-bg);
+}
+
+.vista-reporte .reporte-encabezado {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto 26px;
+}
+
+.vista-reporte .reporte-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--reporte-cyan);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.65px;
+}
+
+.vista-reporte .reporte-badge-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--reporte-cyan);
+  box-shadow: 0 0 9px var(--reporte-cyan);
+}
+
+.vista-reporte .reporte-encabezado h1 {
+  margin: 12px 0 4px;
+  color: #fff;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.vista-reporte .reporte-encabezado p {
+  margin: 0;
+  color: var(--reporte-muted);
+  font-size: 14px;
+}
+
+.vista-reporte .reporte-contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.vista-reporte .mapa-card,
+.vista-reporte .panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--reporte-border);
+  border-radius: 14px;
+  background: var(--reporte-surface);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 0 22px rgba(0, 240, 255, 0.06);
+  position: relative;
+}
+
+.vista-reporte .mapa-card::before,
+.vista-reporte .panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent, var(--reporte-cyan), transparent);
+}
+
+.vista-reporte .reporte-card-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px 16px;
+}
+
+.vista-reporte .reporte-card-titulo h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.vista-reporte .reporte-card-titulo p {
+  margin: 4px 0 0;
+  color: var(--reporte-muted);
+  font-size: 12.5px;
+}
+
+.vista-reporte .reporte-etiqueta {
+  flex: none;
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 5px;
+  background: rgba(0, 240, 255, 0.08);
+  color: var(--reporte-cyan);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.vista-reporte #mapa-inicio {
+  height: clamp(340px, 54vh, 560px);
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: #111827;
+}
+
+.vista-reporte .leaflet-control-layers {
+  border: 1px solid var(--reporte-border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.94);
+  color: var(--reporte-text);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.vista-reporte .leaflet-control-layers-expanded {
+  padding: 8px 10px;
+}
+
+.vista-reporte .leaflet-control-layers label {
+  margin: 4px 0;
+  color: var(--reporte-text);
+  font-size: 12px;
+}
+
+.vista-reporte .leaflet-control-layers-separator {
+  border-top-color: var(--reporte-border);
+}
+
+.vista-reporte .leaflet-control-layers input {
+  accent-color: var(--reporte-cyan);
+}
+
+.vista-reporte .mapa-ayuda {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px 2px;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.vista-reporte .mapa-ayuda span:first-child {
+  color: var(--reporte-cyan);
+  font-size: 18px;
+}
+
+.vista-reporte .coords {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 20px 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 7px;
+  background: rgba(11, 15, 25, 0.7);
+  color: var(--reporte-muted);
+  font-size: 11.5px;
+}
+
+.vista-reporte .coords-indicador {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--reporte-cyan);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.7);
+}
+
+.vista-reporte .coords strong {
+  margin-left: auto;
+  color: var(--reporte-text);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-weight: 600;
+}
+
+.vista-reporte .panel {
+  padding-bottom: 22px;
+}
+
+.vista-reporte .panel .reporte-card-titulo {
+  margin-bottom: 2px;
+}
+
+.vista-reporte .panel form {
+  padding: 0 22px;
+}
+
+.vista-reporte .campo-reporte {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 14px 0 18px;
+}
+
+.vista-reporte .campo-reporte label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+.vista-reporte .campo-reporte label > span:first-child {
+  color: var(--reporte-cyan);
+}
+
+.vista-reporte .campo-reporte .opcional {
+  margin-left: auto;
+  color: var(--reporte-muted);
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.vista-reporte .campo-reporte select,
+.vista-reporte .campo-reporte textarea,
+.vista-reporte .campo-reporte input[type="file"] {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--reporte-border);
+  border-radius: 7px;
+  background: rgba(11, 15, 25, 0.88);
+  color: var(--reporte-text);
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vista-reporte .campo-reporte select:focus,
+.vista-reporte .campo-reporte textarea:focus,
+.vista-reporte .campo-reporte input[type="file"]:focus {
+  border-color: var(--reporte-cyan);
+  outline: none;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.18);
+}
+
+.vista-reporte .campo-reporte textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.vista-reporte .campo-reporte textarea::placeholder {
+  color: rgba(148, 163, 184, 0.62);
+}
+
+.vista-reporte .campo-reporte input[type="file"] {
+  padding: 8px;
+  color: var(--reporte-muted);
+}
+
+.vista-reporte .ayuda-foto {
+  color: var(--reporte-muted);
+  font-size: 11px;
+}
+
+.vista-reporte #foto-preview {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  margin-top: 4px;
+  border: 1px solid var(--reporte-border);
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.vista-reporte button.btn-enviar {
+  width: 100%;
+  margin-top: 4px;
+  padding: 13px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0284c7, #00d9e8);
+  box-shadow: 0 4px 18px rgba(0, 240, 255, 0.18);
+  color: #07111b;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vista-reporte button.btn-enviar:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.34);
+  transform: translateY(-1px);
+}
+
+.vista-reporte button.btn-enviar:disabled {
+  background: #334155;
+  box-shadow: none;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.vista-reporte .nota-obligatorios {
+  margin: 9px 0 0;
+  color: var(--reporte-muted);
+  font-size: 10.5px;
+}
+
+.vista-reporte .nota-obligatorios span {
+  color: var(--reporte-cyan);
+}
+
+.vista-reporte #resultado {
+  margin: 18px 22px 0;
+  padding: 12px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.vista-reporte #resultado p {
+  margin: 0;
+}
+
+.vista-reporte #resultado.ok {
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+}
+
+.vista-reporte #resultado.error {
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  background: rgba(255, 51, 102, 0.12);
+  color: #ff7b95;
+}
+
+.vista-reporte #resultado a {
+  display: inline-block;
+  margin-top: 7px;
+  color: var(--reporte-cyan);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vista-reporte #resultado a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .vista-reporte .reporte-contenido {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 720px;
+  }
+
+  .vista-reporte #mapa-inicio {
+    height: clamp(300px, 48vh, 460px);
+  }
+}
+
+@media (max-width: 520px) {
+  .vista-reporte {
+    padding: 26px 14px 36px;
+  }
+
+  .vista-reporte .reporte-contenido {
+    gap: 14px;
+  }
+
+  .vista-reporte .reporte-card-titulo {
+    padding: 17px 16px 13px;
+  }
+
+  .vista-reporte .panel .reporte-card-titulo {
+    align-items: flex-start;
+  }
+
+  .vista-reporte .panel form {
+    padding: 0 16px;
+  }
+
+  .vista-reporte #resultado {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .vista-reporte .coords {
+    margin-right: 14px;
+    margin-left: 14px;
+  }
+
+  .vista-reporte .coords strong {
+    width: 100%;
+    margin-left: 16px;
+  }
+
+  .vista-reporte .reporte-etiqueta {
+    display: none;
+  }
+
+  .vista-reporte #mapa-inicio {
+    height: 340px;
+  }
+}

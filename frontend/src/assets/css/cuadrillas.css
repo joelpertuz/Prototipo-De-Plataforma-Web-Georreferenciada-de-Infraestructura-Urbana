@@ -1,0 +1,459 @@
+:root {
+  --cyber-bg: #090d16;
+  --cyber-surface: rgba(15, 23, 42, 0.9);
+  --cyber-surface-hover: rgba(30, 41, 59, 0.85);
+  --cyber-card: rgba(18, 26, 47, 0.95);
+  --cyber-border: rgba(56, 189, 248, 0.25);
+  --cyber-border-hover: rgba(56, 189, 248, 0.6);
+  --cyber-glow: rgba(0, 240, 255, 0.25);
+  --cyber-cyan: #00f0ff;
+  --cyber-blue: #38bdf8;
+  --cyber-amber: #ffb703;
+  --cyber-crimson: #ff3366;
+  --cyber-emerald: #10b981;
+  --cyber-text: #f1f5f9;
+  --cyber-muted: #94a3b8;
+  --cyber-mono: 'Consolas', 'Fira Code', 'Roboto Mono', monospace;
+}
+
+.vista-cuadrillas {
+  width: 100%;
+  min-height: 100%;
+  padding: 32px 20px 60px;
+  flex: 1;
+  color: var(--cyber-text);
+  background: var(--cyber-bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vista-cuadrillas>* {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Insignia superior táctica */
+.vista-cuadrillas .terminal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--cyber-cyan);
+  font-family: var(--cyber-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+}
+
+.vista-cuadrillas .badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyber-cyan);
+  box-shadow: 0 0 8px var(--cyber-cyan);
+  animation: dot-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes dot-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+.vista-cuadrillas .titulo-seccion {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.vista-cuadrillas .sub-seccion {
+  margin: 0 0 24px;
+  color: var(--cyber-muted);
+  font-size: 13.5px;
+}
+
+/* Selector de Cuadrilla */
+.vista-cuadrillas .field-cuadrilla {
+  background: var(--cyber-card);
+  border: 1px solid var(--cyber-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.vista-cuadrillas .field-cuadrilla label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--cyber-cyan);
+  font-family: var(--cyber-mono);
+  margin-bottom: 8px;
+}
+
+.vista-cuadrillas select.cyber-select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--cyber-border);
+  border-radius: 8px;
+  background: rgba(11, 15, 25, 0.9);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.vista-cuadrillas select.cyber-select:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 14px var(--cyber-glow);
+  outline: none;
+}
+
+/* Tarjeta Principal */
+.vista-cuadrillas .card {
+  background: var(--cyber-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--cyber-border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.vista-cuadrillas .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyber-cyan), transparent);
+}
+
+.vista-cuadrillas .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vista-cuadrillas .card-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vista-cuadrillas .contador-badge {
+  font-family: var(--cyber-mono);
+  font-size: 12px;
+  color: var(--cyber-cyan);
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* Lista de Reportes */
+.vista-cuadrillas .lista-reportes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vista-cuadrillas .lista-reportes button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--cyber-card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vista-cuadrillas .lista-reportes button:hover {
+  background: var(--cyber-surface-hover);
+  border-color: var(--cyber-border-hover);
+  transform: translateX(3px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.vista-cuadrillas .code {
+  font-weight: 700;
+  font-family: var(--cyber-mono);
+  color: var(--cyber-cyan);
+  font-size: 14px;
+}
+
+.vista-cuadrillas .tipo-txt {
+  color: #fff;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.vista-cuadrillas .sub {
+  color: var(--cyber-muted);
+  font-size: 12.5px;
+  margin-top: 3px;
+  display: block;
+}
+
+.vista-cuadrillas .pill {
+  font-size: 11.5px;
+  font-family: var(--cyber-mono);
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--cyber-blue);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  white-space: nowrap;
+}
+
+.vista-cuadrillas .pill.urg-alta {
+  background: rgba(255, 51, 102, 0.2);
+  color: #ff5577;
+  border-color: rgba(255, 51, 102, 0.5);
+  box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+}
+
+.vista-cuadrillas .vacio {
+  padding: 36px 12px;
+  color: var(--cyber-muted);
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Formulario de Cierre de Obra */
+.vista-cuadrillas .cierre h2 {
+  margin: 8px 0 2px;
+  font-size: 20px;
+  color: var(--cyber-cyan);
+  font-family: var(--cyber-mono);
+  font-weight: 700;
+}
+
+.vista-cuadrillas .cierre .sub {
+  margin-bottom: 22px;
+  font-size: 13.5px;
+}
+
+.vista-cuadrillas .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 18px;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.vista-cuadrillas .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--cyber-cyan);
+  color: var(--cyber-cyan);
+}
+
+.vista-cuadrillas .fotos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.vista-cuadrillas .foto-box label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyber-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.vista-cuadrillas .foto-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--cyber-border);
+  border-radius: 10px;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: rgba(11, 15, 25, 0.85);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vista-cuadrillas .foto-input:hover {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 16px var(--cyber-glow);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.vista-cuadrillas .foto-input input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.vista-cuadrillas .foto-input img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vista-cuadrillas .foto-input .placeholder {
+  color: var(--cyber-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.vista-cuadrillas .placeholder-ico {
+  font-size: 22px;
+  color: var(--cyber-cyan);
+}
+
+.vista-cuadrillas .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.vista-cuadrillas .field label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cyber-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vista-cuadrillas textarea.cyber-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(11, 15, 25, 0.85);
+  border: 1px solid var(--cyber-border);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 90px;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.vista-cuadrillas textarea.cyber-textarea:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 14px var(--cyber-glow);
+  outline: none;
+}
+
+.vista-cuadrillas .btn-solid {
+  background: linear-gradient(135deg, #0284c7, #00f0ff);
+  color: #090d16;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  width: 100%;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px rgba(0, 240, 255, 0.25);
+}
+
+.vista-cuadrillas .btn-solid:hover:not(:disabled) {
+  filter: brightness(1.15);
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+.vista-cuadrillas .btn-solid:disabled {
+  background: #334155;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vista-cuadrillas .msg {
+  padding: 13px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  margin-bottom: 20px;
+  display: none;
+}
+
+.vista-cuadrillas .msg.ok {
+  display: block;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.vista-cuadrillas .msg.err {
+  display: block;
+  background: rgba(255, 51, 102, 0.15);
+  color: #ff5577;
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  box-shadow: 0 0 12px rgba(255, 51, 102, 0.2);
+}
+
+@media (max-width: 580px) {
+  .vista-cuadrillas .fotos {
+    grid-template-columns: 1fr;
+  }
+}

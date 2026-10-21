@@ -1,0 +1,1276 @@
+/* =========================================================
+   DASHBOARD / CENTRO DE OPERACIONES TÁCTICO
+   ========================================================= */
+
+:root {
+  --cyber-bg: #090d16;
+  --cyber-surface: rgba(15, 23, 42, 0.9);
+  --cyber-surface-hover: rgba(30, 41, 59, 0.85);
+  --cyber-card: rgba(18, 26, 47, 0.95);
+  --cyber-border: rgba(56, 189, 248, 0.2);
+  --cyber-border-hover: rgba(56, 189, 248, 0.5);
+  --cyber-glow: rgba(0, 240, 255, 0.25);
+  --cyber-cyan: #00f0ff;
+  --cyber-blue: #38bdf8;
+  --cyber-amber: #ffb703;
+  --cyber-crimson: #ff3366;
+  --cyber-emerald: #10b981;
+  --cyber-text: #f1f5f9;
+  --cyber-muted: #94a3b8;
+  --cyber-mono: 'Consolas', 'Fira Code', 'Roboto Mono', monospace;
+}
+
+.vista-dashboard {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  height: calc(100vh - 65px);
+  position: relative;
+  background-color: var(--cyber-bg);
+  color: var(--cyber-text);
+  overflow: hidden;
+  transition: grid-template-columns 0.3s ease;
+}
+
+/* Modo mapa oculto: el panel se expande a pantalla completa */
+.vista-dashboard.mapa-oculto {
+  grid-template-columns: 1fr;
+  overflow-y: auto;
+}
+
+.vista-dashboard.mapa-oculto #map-wrap {
+  display: none !important;
+}
+
+.vista-dashboard.mapa-oculto aside {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  border-right: none;
+  padding: 24px 32px 60px;
+}
+
+.vista-dashboard.mapa-oculto .lista-reportes-scroll {
+  max-height: 520px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 10px;
+}
+
+.vista-dashboard.mapa-oculto .grid-detalles-modo-lista {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+/* ---------------------------------------------------------
+   BARRA LATERAL / PANEL HUD
+   --------------------------------------------------------- */
+.vista-dashboard aside {
+  background: var(--cyber-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--cyber-border);
+  overflow-y: auto;
+  padding: 16px 18px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+/* Scrollbar personalizado */
+.vista-dashboard aside::-webkit-scrollbar,
+.vista-dashboard .lista-reportes-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.vista-dashboard aside::-webkit-scrollbar-track,
+.vista-dashboard .lista-reportes-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+.vista-dashboard aside::-webkit-scrollbar-thumb,
+.vista-dashboard .lista-reportes-scroll::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+}
+.vista-dashboard aside::-webkit-scrollbar-thumb:hover,
+.vista-dashboard .lista-reportes-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--cyber-cyan);
+}
+
+/* Cabecera del Centro de Mando */
+.vista-dashboard .hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cyber-border);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vista-dashboard .hud-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.vista-dashboard .hud-brand h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vista-dashboard .hud-brand .sub {
+  font-size: 11px;
+  font-family: var(--cyber-mono);
+  color: var(--cyber-cyan);
+  opacity: 0.85;
+}
+
+.vista-dashboard .hud-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón alternar mapa (Toggle mapa) */
+.vista-dashboard .btn-toggle-mapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #fff;
+  font-size: 11.5px;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.vista-dashboard .btn-toggle-mapa:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+.vista-dashboard .btn-toggle-mapa.inactivo {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--cyber-muted);
+}
+
+.vista-dashboard .hud-live-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-size: 11px;
+  font-family: var(--cyber-mono);
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.vista-dashboard .hud-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #34d399;
+  animation: live-blink 1.5s infinite ease-in-out;
+}
+
+@keyframes live-blink {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 6px #34d399; }
+  50% { opacity: 0.3; transform: scale(0.85); box-shadow: none; }
+}
+
+/* Banner de modo lista */
+.vista-dashboard .banner-modo-lista {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vista-dashboard .banner-modo-lista p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--cyber-cyan);
+}
+
+/* Métricas Rápidas KPI */
+.vista-dashboard .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.vista-dashboard .kpi-card {
+  background: var(--cyber-card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.vista-dashboard .kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--kpi-color, var(--cyber-cyan)), transparent);
+}
+
+.vista-dashboard .kpi-num {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  font-family: var(--cyber-mono);
+  line-height: 1.1;
+}
+
+.vista-dashboard .kpi-label {
+  font-size: 10.5px;
+  color: var(--cyber-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* Sección de Estados */
+.vista-dashboard .seccion-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cyber-muted);
+  font-family: var(--cyber-mono);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vista-dashboard .estados {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.vista-dashboard .estado-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: var(--cyber-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.vista-dashboard .estado-btn:hover {
+  border-color: var(--cyber-border-hover);
+  background: var(--cyber-surface-hover);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.vista-dashboard .estado-btn[aria-pressed="false"] {
+  opacity: 0.35;
+  background: rgba(15, 23, 42, 0.4);
+  filter: grayscale(0.6);
+}
+
+.vista-dashboard .estado-btn .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.vista-dashboard .estado-btn .txt {
+  display: flex;
+  flex-direction: column;
+}
+
+.vista-dashboard .estado-btn .n {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--cyber-mono);
+}
+
+.vista-dashboard .estado-btn .l {
+  font-size: 11px;
+  color: var(--cyber-muted);
+}
+
+/* Filtro por tipo */
+.vista-dashboard .field-tipo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vista-dashboard select.cyber-select,
+.vista-dashboard input.cyber-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(11, 15, 25, 0.8);
+  border: 1px solid var(--cyber-border);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.vista-dashboard select.cyber-select:focus,
+.vista-dashboard input.cyber-input:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 12px var(--cyber-glow);
+  outline: none;
+}
+
+/* ---------------------------------------------------------
+   LISTA DE REPORTES ("POR ATENDER PRIMERO")
+   --------------------------------------------------------- */
+.vista-dashboard .seccion-reportes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vista-dashboard .buscador-wrap {
+  position: relative;
+}
+
+.vista-dashboard .buscador-input {
+  width: 100%;
+  padding: 7px 10px 7px 30px;
+  background: rgba(11, 15, 25, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12.5px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.vista-dashboard .buscador-input:focus {
+  border-color: var(--cyber-cyan);
+  outline: none;
+}
+
+.vista-dashboard .buscador-icono {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.vista-dashboard .lista-reportes-scroll {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.vista-dashboard .reporte-item-btn {
+  width: 100%;
+  background: var(--cyber-card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vista-dashboard .reporte-item-btn:hover {
+  background: var(--cyber-surface-hover);
+  border-color: var(--cyber-border-hover);
+  transform: translateX(2px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.vista-dashboard .reporte-item-btn.activo {
+  border-color: var(--cyber-cyan);
+  background: rgba(0, 240, 255, 0.08);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+}
+
+.vista-dashboard .reporte-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vista-dashboard .reporte-item-cod {
+  font-family: var(--cyber-mono);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--cyber-cyan);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vista-dashboard .reporte-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.vista-dashboard .reporte-item-urg {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--cyber-mono);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.vista-dashboard .urg-alta {
+  background: rgba(255, 51, 102, 0.2);
+  color: #ff5577;
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  box-shadow: 0 0 8px rgba(255, 51, 102, 0.25);
+}
+
+.vista-dashboard .urg-media {
+  background: rgba(255, 183, 3, 0.15);
+  color: #ffc425;
+  border: 1px solid rgba(255, 183, 3, 0.35);
+}
+
+.vista-dashboard .urg-baja {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.vista-dashboard .reporte-item-desc {
+  font-size: 12px;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vista-dashboard .reporte-item-meta {
+  font-size: 11px;
+  color: var(--cyber-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vista-dashboard .reporte-item-vacio {
+  padding: 16px;
+  text-align: center;
+  color: var(--cyber-muted);
+  font-size: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* ---------------------------------------------------------
+   SECCIÓN DE CUADRILLAS
+   --------------------------------------------------------- */
+.vista-dashboard .cuadrillas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.vista-dashboard .cuadrilla-item {
+  background: var(--cyber-card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 7px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vista-dashboard .cuadrilla-nombre {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vista-dashboard .cuadrilla-zona {
+  font-size: 11px;
+  color: var(--cyber-muted);
+  margin-left: 14px;
+}
+
+.vista-dashboard .cuadrilla-badge {
+  font-size: 11px;
+  font-family: var(--cyber-mono);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--cyber-blue);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.vista-dashboard .form-cuadrilla-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.vista-dashboard .row2 {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 6px;
+}
+
+.vista-dashboard .btn-cyber-submit {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #fff;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+}
+
+.vista-dashboard .btn-cyber-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 0 12px var(--cyber-glow);
+}
+
+/* ---------------------------------------------------------
+   MAPA Y CONTROLES FLOTANTES
+   --------------------------------------------------------- */
+.vista-dashboard #map-wrap {
+  position: relative;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  background: #1e293b;
+}
+
+/* Controles flotantes sobre el mapa (HUD overlay) */
+.vista-dashboard .map-hud-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vista-dashboard .hud-glass-pill {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--cyber-border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+
+.vista-dashboard .hud-tab-btn {
+  background: transparent;
+  color: var(--cyber-muted);
+  border: none;
+  padding: 6px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.vista-dashboard .hud-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vista-dashboard .hud-tab-btn.activo {
+  background: rgba(0, 240, 255, 0.15);
+  color: var(--cyber-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.vista-dashboard .hud-toggle-btn {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--cyber-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--cyber-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.vista-dashboard .hud-toggle-btn:hover {
+  color: #fff;
+  border-color: var(--cyber-border-hover);
+}
+
+.vista-dashboard .hud-toggle-btn.activo {
+  background: rgba(255, 51, 102, 0.2);
+  color: #ff5577;
+  border-color: rgba(255, 51, 102, 0.6);
+  box-shadow: 0 0 14px rgba(255, 51, 102, 0.3);
+}
+
+/* ---------------------------------------------------------
+   MARCADORES NEÓN PERSONALIZADOS EN EL MAPA
+   --------------------------------------------------------- */
+.custom-cyber-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cyber-pin {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cyber-pin .pin-core {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 12px var(--pin-color);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2;
+}
+
+.cyber-pin:hover .pin-core,
+.cyber-pin.pin-selected .pin-core {
+  transform: scale(1.6);
+  box-shadow: 0 0 15px #ffffff, 0 0 25px var(--pin-color);
+}
+
+.cyber-pin .pin-ring {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--pin-color);
+  opacity: 0.6;
+}
+
+.cyber-pin.pulse-high .pin-ring {
+  animation: cyber-radar-pulse 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes cyber-radar-pulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* ---------------------------------------------------------
+   POPUPS SCI-FI EN EL MAPA
+   --------------------------------------------------------- */
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.94) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.2) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--cyber-muted) !important;
+}
+.leaflet-popup-close-button:hover {
+  color: #fff !important;
+}
+
+.popup {
+  min-width: 260px;
+  font-size: 13px;
+  font-family: system-ui, sans-serif;
+}
+
+.popup h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-family: var(--cyber-mono);
+  color: var(--cyber-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup .meta {
+  color: var(--cyber-muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.popup p {
+  margin: 6px 0 10px;
+  color: #e2e8f0;
+  line-height: 1.4;
+  font-size: 12.5px;
+}
+
+.popup .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.popup .field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--cyber-muted);
+}
+
+.popup select {
+  width: 100%;
+  padding: 6px 8px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12.5px;
+}
+
+.popup select:focus {
+  border-color: var(--cyber-cyan);
+  outline: none;
+}
+
+.popup .btn-solid {
+  width: 100%;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #0284c7, #00f0ff);
+  color: #0b0f19;
+  font-weight: 700;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  transition: all 0.2s;
+}
+
+.popup .btn-solid:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+}
+
+.foto-reporte {
+  display: block;
+  width: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--cyber-border);
+  margin: 6px 0 10px;
+}
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------- */
+@media (max-width: 900px) {
+  .vista-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52vh 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .vista-dashboard #map-wrap {
+    order: -1;
+    min-height: 400px;
+  }
+  .vista-dashboard aside {
+    border-right: none;
+    border-top: 1px solid var(--cyber-border);
+  }
+}
+
+/* =========================================================
+   MODAL DE GESTIÓN DE USUARIOS (SECRETARÍA EXCLUSIVO)
+   ========================================================= */
+
+.vista-dashboard .btn-admin-usuarios {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  font-size: 11.5px;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.vista-dashboard .btn-admin-usuarios:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #34d399;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Tarjeta destacada de Administración de Usuarios en la barra lateral */
+.vista-dashboard .admin-banner-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 14px rgba(16, 185, 129, 0.15);
+}
+
+.vista-dashboard .admin-banner-card:hover {
+  border-color: #34d399;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(30, 41, 59, 0.95));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 22px rgba(16, 185, 129, 0.35);
+}
+
+.vista-dashboard .admin-banner-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex: none;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.vista-dashboard .admin-banner-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vista-dashboard .admin-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.vista-dashboard .admin-banner-badge {
+  font-size: 9.5px;
+  font-family: var(--cyber-mono);
+  background: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.vista-dashboard .admin-banner-sub {
+  font-size: 11px;
+  color: var(--cyber-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vista-dashboard .admin-banner-arrow {
+  color: #34d399;
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.vista-dashboard .admin-banner-card:hover .admin-banner-arrow {
+  transform: translateX(4px);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-cyber {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid var(--cyber-border);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.15);
+  position: relative;
+  color: var(--cyber-text);
+}
+
+.modal-cyber::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyber-cyan), transparent);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-header h2 {
+  margin: 6px 0 2px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.modal-header .sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--cyber-muted);
+}
+
+.btn-cerrar-modal {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.btn-cerrar-modal:hover {
+  background: rgba(255, 51, 102, 0.2);
+  border-color: rgba(255, 51, 102, 0.5);
+  color: #ff5577;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 24px;
+}
+
+/* Tabla / Lista de usuarios */
+.usuarios-lista-col h3,
+.usuarios-form-col h3 {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyber-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--cyber-mono);
+}
+
+.tabla-usuarios-wrap {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: var(--cyber-card);
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.tabla-usuarios th {
+  background: rgba(11, 15, 25, 0.9);
+  padding: 10px 12px;
+  color: var(--cyber-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--cyber-border);
+  font-size: 11.5px;
+  text-transform: uppercase;
+}
+
+.tabla-usuarios td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #fff;
+  vertical-align: middle;
+}
+
+.tabla-usuarios tr:hover {
+  background: var(--cyber-surface-hover);
+}
+
+.user-cell-meta {
+  font-size: 11px;
+  color: var(--cyber-muted);
+}
+
+.badge-rol {
+  font-size: 10.5px;
+  font-family: var(--cyber-mono);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-rol.funcionario {
+  background: rgba(0, 240, 255, 0.15);
+  color: var(--cyber-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+}
+
+.badge-rol.cuadrilla {
+  background: rgba(255, 183, 3, 0.15);
+  color: var(--cyber-amber);
+  border: 1px solid rgba(255, 183, 3, 0.35);
+}
+
+.btn-toggle-user {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-toggle-user.activo {
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.btn-toggle-user.inactivo {
+  color: #ff5577;
+  border-color: rgba(255, 51, 102, 0.4);
+  background: rgba(255, 51, 102, 0.1);
+}
+
+.btn-del-user {
+  background: none;
+  border: none;
+  color: var(--cyber-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  transition: color 0.2s;
+}
+
+.btn-del-user:hover {
+  color: #ff5577;
+}
+
+/* Formulario agregar usuario */
+.usuarios-form-col {
+  background: var(--cyber-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.cyber-form-user {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cyber-form-user .field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cyber-form-user .field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--cyber-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cyber-form-user input,
+.cyber-form-user select {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid var(--cyber-border);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.cyber-form-user input:focus,
+.cyber-form-user select:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 10px var(--cyber-glow);
+  outline: none;
+}
+
+.btn-crear-usuario {
+  background: linear-gradient(135deg, #0284c7, #00f0ff);
+  color: #090d16;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 240, 255, 0.25);
+}
+
+.btn-crear-usuario:hover:not(:disabled) {
+  filter: brightness(1.15);
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.45);
+}
+
+.msg-admin {
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: none;
+}
+
+.msg-admin.ok {
+  display: block;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.msg-admin.err {
+  display: block;
+  background: rgba(255, 51, 102, 0.15);
+  color: #ff5577;
+  border: 1px solid rgba(255, 51, 102, 0.4);
+}
+
+@media (max-width: 768px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
