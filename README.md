@@ -1,4 +1,4 @@
-# Plataforma Vial y Alumbrado
+# Plataforma Vial y Alumbrado (Prototipo)
 
 Aplicación web para registrar daños viales y de alumbrado en San Andrés de Sotavento, consultar su atención y gestionar su asignación a cuadrillas.
 
