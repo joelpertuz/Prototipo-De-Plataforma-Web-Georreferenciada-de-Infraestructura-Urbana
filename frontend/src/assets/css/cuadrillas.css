@@ -260,6 +260,31 @@
   font-size: 14px;
 }
 
+.vista-cuadrillas .paginacion-cuadrillas {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  color: var(--cyber-muted);
+  font-size: 12px;
+}
+
+.vista-cuadrillas .paginacion-cuadrillas button {
+  padding: 7px 10px;
+  border: 1px solid var(--cyber-border);
+  border-radius: 6px;
+  background: var(--cyber-card);
+  color: var(--cyber-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.vista-cuadrillas .paginacion-cuadrillas button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Formulario de Cierre de Obra */
 .vista-cuadrillas .cierre h2 {
   margin: 8px 0 2px;
@@ -333,6 +358,11 @@
   background: rgba(15, 23, 42, 0.95);
 }
 
+.vista-cuadrillas .foto-input:focus-within {
+  outline: 2px solid var(--cyber-cyan);
+  outline-offset: 3px;
+}
+
 .vista-cuadrillas .foto-input input[type="file"] {
   position: absolute;
   inset: 0;
@@ -347,6 +377,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.vista-cuadrillas .ayuda-fotos {
+  margin: -10px 0 18px;
+  color: var(--cyber-muted);
+  font-size: 11.5px;
 }
 
 .vista-cuadrillas .foto-input .placeholder {

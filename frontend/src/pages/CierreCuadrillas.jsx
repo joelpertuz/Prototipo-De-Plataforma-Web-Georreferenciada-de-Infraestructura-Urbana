@@ -21,6 +21,9 @@ function CierreCuadrillas() {
     cuadrillaSeleccionada,
     setCuadrillaSeleccionada,
     reportes,
+    paginaReportes,
+    setPaginaReportes,
+    paginacion,
     reporteActivo,
     setReporteActivo,
     fotoAntes,
@@ -48,7 +51,7 @@ function CierreCuadrillas() {
       <p className="sub-seccion">Municipio de San Andrés de Sotavento · Cuadrillas Operativas</p>
 
       {mensaje.texto && (
-        <div className={`msg ${mensaje.tipo}`} style={{ display: 'block' }}>
+        <div className={`msg ${mensaje.tipo}`} style={{ display: 'block' }} role={mensaje.tipo === 'err' ? 'alert' : 'status'}>
           {mensaje.texto}
         </div>
       )}
@@ -61,7 +64,10 @@ function CierreCuadrillas() {
               id="select-cuad"
               className="cyber-select"
               value={cuadrillaSeleccionada}
-              onChange={e => setCuadrillaSeleccionada(e.target.value)}
+              onChange={e => {
+                setCuadrillaSeleccionada(e.target.value);
+                setPaginaReportes(1);
+              }}
             >
               <option value="">-- Selecciona tu brigada de trabajo --</option>
               {cuadrillas.map(c => (
@@ -77,7 +83,7 @@ function CierreCuadrillas() {
               <div className="card-header">
                 <h2>Obras Asignadas para Intervención</h2>
                 <span className="contador-badge">
-                  {reportes.length} {reportes.length === 1 ? 'pendiente' : 'pendientes'}
+                  {paginacion.total} {paginacion.total === 1 ? 'pendiente' : 'pendientes'}
                 </span>
               </div>
 
@@ -113,6 +119,25 @@ function CierreCuadrillas() {
               </p>
             </div>
           )}
+          {paginacion.totalPages > 1 && (
+            <nav className="paginacion-cuadrillas" aria-label="Paginación de reportes asignados">
+              <button
+                type="button"
+                onClick={() => setPaginaReportes(paginaReportes - 1)}
+                disabled={paginaReportes <= 1}
+              >
+                Anterior
+              </button>
+              <span>Página {paginaReportes} de {paginacion.totalPages}</span>
+              <button
+                type="button"
+                onClick={() => setPaginaReportes(paginaReportes + 1)}
+                disabled={paginaReportes >= paginacion.totalPages}
+              >
+                Siguiente
+              </button>
+            </nav>
+          )}
         </>
       ) : (
         <section className="card cierre">
@@ -126,7 +151,7 @@ function CierreCuadrillas() {
           <form onSubmit={manejarEnvio}>
             <div className="fotos">
               <div className="foto-box">
-                <label>Foto Inicial "Antes" (opcional)</label>
+                <label>Foto inicial «Antes» (opcional)</label>
                 <div className="foto-input">
                   {fotoAntesPreview ? (
                     <img src={fotoAntesPreview} alt="Foto antes de la obra" />
@@ -139,13 +164,14 @@ function CierreCuadrillas() {
                   <input
                     type="file"
                     accept="image/*"
+                    aria-label="Subir foto antes de la reparación"
                     onChange={e => setFotoAntes(e.target.files[0])}
                   />
                 </div>
               </div>
 
               <div className="foto-box">
-                <label>Foto Final "Después" (obligatoria)</label>
+                <label>Foto final «Después» (obligatoria)</label>
                 <div className="foto-input">
                   {fotoDespuesPreview ? (
                     <img src={fotoDespuesPreview} alt="Foto después de la obra" />
@@ -159,15 +185,18 @@ function CierreCuadrillas() {
                     type="file"
                     accept="image/*"
                     required
+                    aria-label="Subir foto después de la reparación"
                     onChange={e => setFotoDespues(e.target.files[0])}
                   />
                 </div>
               </div>
             </div>
+            <p className="ayuda-fotos">JPG, PNG o WEBP · Máximo 8 MB por fotografía.</p>
 
             <div className="field">
-              <label>Observaciones de la reparación realizada</label>
+              <label htmlFor="observaciones-cierre">Observaciones de la reparación realizada</label>
               <textarea
+                id="observaciones-cierre"
                 className="cyber-textarea"
                 placeholder="Detalla materiales utilizados, estado final de la vía o recomendaciones..."
                 value={observaciones}

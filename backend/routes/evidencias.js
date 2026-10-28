@@ -1,45 +1,40 @@
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const router = express.Router();
 const pool = require("../db/pool");
 const { requerirSesion } = require("../middleware/auth");
+const { crearCargaImagenes, validarImagenes, borrarImagenes } = require("../middleware/uploadImages");
 
-const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, "..", "uploads");
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const sufijo = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `${file.fieldname}-${sufijo}${path.extname(file.originalname).toLowerCase() || ".jpg"}`);
-  },
-});
-const permitido = /jpeg|jpg|png|webp/;
-const upload = multer({
-  storage,
-  limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB por foto
-  fileFilter: (req, file, cb) => {
-    const ok = permitido.test(path.extname(file.originalname).toLowerCase()) && permitido.test(file.mimetype);
-    cb(ok ? null : new Error("Solo se permiten imágenes JPG, PNG o WEBP"), ok);
-  },
-});
+const cargarFotos = crearCargaImagenes(
+  [{ name: "foto_antes", maxCount: 1 }, { name: "foto_despues", maxCount: 1 }],
+  UPLOADS_DIR
+);
 
 // Recibe las fotos de antes/después y devuelve los errores de subida en JSON
 function recibirFotos(req, res, next) {
-  upload.fields([{ name: "foto_antes", maxCount: 1 }, { name: "foto_despues", maxCount: 1 }])(req, res, (err) => {
-    if (!err) return next();
-    const mensaje = err.code === "LIMIT_FILE_SIZE" ? "Una de las fotos pesa más de 8 MB" : err.message;
-    res.status(400).json({ error: mensaje });
+  cargarFotos(req, res, async err => {
+    if (err) {
+      borrarImagenes(req.files);
+      const mensaje = err.code === "LIMIT_FILE_SIZE" ? "Una de las fotos pesa más de 8 MB" : err.message;
+      return res.status(400).json({ error: mensaje });
+    }
+    try {
+      await validarImagenes(req);
+      return next();
+    } catch (error) {
+      borrarImagenes(req.files);
+      return res.status(400).json({ error: error.message });
+    }
   });
 }
 
 // Borra del disco las fotos recién subidas cuando la operación no se completa
 function borrarSubidas(req) {
-  for (const lista of Object.values(req.files || {})) {
-    for (const f of lista) fs.unlink(f.path, () => {});
-  }
+  borrarImagenes(req.files);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -76,9 +71,10 @@ router.get("/:reporte_id", requerirSesion(["funcionario", "cuadrilla"]), async (
 // multipart/form-data con campos: reporte_id, observaciones, foto_antes, foto_despues
 // La sesión se verifica ANTES de recibir las fotos, para no guardar archivos de usuarios sin permiso.
 router.post("/", requerirSesion(["funcionario", "cuadrilla"]), recibirFotos, async (req, res) => {
-  const client = await pool.connect();
+  let client;
   try {
-    const { reporte_id, observaciones } = req.body;
+    client = await pool.connect();
+    const { reporte_id, observaciones } = req.body || {};
     if (!reporte_id || !UUID.test(reporte_id)) {
       borrarSubidas(req);
       return res.status(400).json({ error: "reporte_id es obligatorio" });
@@ -97,7 +93,7 @@ router.post("/", requerirSesion(["funcionario", "cuadrilla"]), recibirFotos, asy
     await client.query("BEGIN");
 
     const existente = await client.query(
-      "SELECT id, cuadrilla_id FROM reportes WHERE id = $1 FOR UPDATE",
+      "SELECT id, cuadrilla_id, estado FROM reportes WHERE id = $1 FOR UPDATE",
       [reporte_id]
     );
     if (existente.rows.length === 0) {
@@ -110,15 +106,30 @@ router.post("/", requerirSesion(["funcionario", "cuadrilla"]), recibirFotos, asy
       borrarSubidas(req);
       return res.status(403).json({ error: "Este reporte no está asignado a tu cuadrilla" });
     }
+    if (existente.rows[0].estado === "resuelto") {
+      await client.query("ROLLBACK");
+      borrarSubidas(req);
+      return res.status(409).json({ error: "El reporte ya está resuelto; la evidencia de cierre no se puede reemplazar" });
+    }
+    if (existente.rows[0].estado !== "en_reparacion") {
+      await client.query("ROLLBACK");
+      borrarSubidas(req);
+      return res.status(409).json({ error: "El reporte debe estar en reparación antes de registrar el cierre" });
+    }
+
+    const evidenciaExistente = await client.query(
+      "SELECT 1 FROM evidencias WHERE reporte_id = $1",
+      [reporte_id]
+    );
+    if (evidenciaExistente.rows.length) {
+      await client.query("ROLLBACK");
+      borrarSubidas(req);
+      return res.status(409).json({ error: "Ya existe evidencia de cierre para este reporte" });
+    }
 
     const { rows } = await client.query(
       `INSERT INTO evidencias (reporte_id, foto_antes_url, foto_despues_url, observaciones)
        VALUES ($1, $2, $3, $4)
-       ON CONFLICT (reporte_id) DO UPDATE SET
-         foto_antes_url = COALESCE(EXCLUDED.foto_antes_url, evidencias.foto_antes_url),
-         foto_despues_url = EXCLUDED.foto_despues_url,
-         observaciones = EXCLUDED.observaciones,
-         fecha_cierre = now()
        RETURNING id, reporte_id, foto_antes_url, foto_despues_url, observaciones, fecha_cierre`,
       [reporte_id, urlAntes, urlDespues, observaciones || null]
     );
@@ -127,16 +138,22 @@ router.post("/", requerirSesion(["funcionario", "cuadrilla"]), recibirFotos, asy
       `UPDATE reportes SET estado = 'resuelto', fecha_actualizacion = now() WHERE id = $1`,
       [reporte_id]
     );
+    if (existente.rows[0].estado !== "resuelto") {
+      await client.query(
+        "INSERT INTO historial_estados (reporte_id, estado, usuario_id) VALUES ($1, 'resuelto', $2)",
+        [reporte_id, req.usuario.id]
+      );
+    }
 
     await client.query("COMMIT");
     res.status(201).json(rows[0]);
   } catch (err) {
-    await client.query("ROLLBACK").catch(() => {});
+    if (client) await client.query("ROLLBACK").catch(() => {});
     borrarSubidas(req);
     console.error(err);
     res.status(500).json({ error: "Error al registrar la evidencia" });
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 

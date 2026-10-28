@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { api } from '../services/api';
 import { useObjectUrl } from './useObjectUrl';
 
@@ -7,21 +7,37 @@ export function useReporte() {
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [foto, setFoto] = useState(null);
+  const fotoInputRef = useRef(null);
   const fotoPreview = useObjectUrl(foto);
   const [estadoRespuesta, setEstadoRespuesta] = useState({ tipo: '', mensaje: '', codigo: '' });
   const [enviando, setEnviando] = useState(false);
 
   const manejarFoto = (e) => {
     const archivo = e.target.files[0];
+    if (archivo && !['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)) {
+      setFoto(null);
+      setEstadoRespuesta({ tipo: 'error', mensaje: 'Selecciona una imagen JPG, PNG o WEBP.' });
+      e.target.value = '';
+      return;
+    }
+    if (archivo && archivo.size > 8 * 1024 * 1024) {
+      setFoto(null);
+      setEstadoRespuesta({ tipo: 'error', mensaje: 'La foto pesa más de 8 MB.' });
+      e.target.value = '';
+      return;
+    }
     setFoto(archivo || null);
+    setEstadoRespuesta({ tipo: '', mensaje: '' });
+  };
+
+  const quitarFoto = () => {
+    setFoto(null);
+    if (fotoInputRef.current) fotoInputRef.current.value = '';
   };
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
     if (!posicion) return;
-    if (foto && foto.size > 8 * 1024 * 1024) {
-      setEstadoRespuesta({ tipo: 'error', mensaje: '⚠ La foto pesa más de 8 MB.' }); return;
-    }
     setEnviando(true); setEstadoRespuesta({ tipo: '', mensaje: '' });
     
     const datos = new FormData();
@@ -41,5 +57,8 @@ export function useReporte() {
     } finally { setEnviando(false); }
   };
 
-  return { posicion, setPosicion, tipo, setTipo, descripcion, setDescripcion, fotoPreview, manejarFoto, manejarEnvio, estadoRespuesta, enviando };
+  return {
+    posicion, setPosicion, tipo, setTipo, descripcion, setDescripcion, fotoPreview,
+    fotoInputRef, manejarFoto, quitarFoto, manejarEnvio, estadoRespuesta, enviando
+  };
 }

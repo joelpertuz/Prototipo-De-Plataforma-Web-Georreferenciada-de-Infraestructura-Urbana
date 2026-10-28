@@ -30,10 +30,14 @@ function registrarFallo(llave) {
 // POST /api/auth/login -> { usuario, clave }
 router.post("/login", async (req, res) => {
   try {
-    const usuario = String(req.body.usuario || "").trim().toLowerCase();
-    const clave = String(req.body.clave || "");
+    const body = req.body || {};
+    const usuario = String(body.usuario || "").trim().toLowerCase();
+    const clave = String(body.clave || "");
     if (!usuario || !clave) {
       return res.status(400).json({ error: "Escribe tu usuario y contraseña" });
+    }
+    if (usuario.length > 100 || clave.length > 128) {
+      return res.status(400).json({ error: "El usuario o la contraseña superan la longitud permitida" });
     }
 
     const llave = `${req.ip}|${usuario}`;
@@ -115,34 +119,57 @@ router.get("/usuarios", requerirSesion(["funcionario"]), async (req, res) => {
 // POST /api/auth/usuarios -> Crear o actualizar credenciales de un usuario
 router.post("/usuarios", requerirSesion(["funcionario"]), async (req, res) => {
   try {
-    const { usuario, clave, nombre, rol, cuadrilla_id } = req.body;
-    if (!usuario || !clave || !nombre || !rol) {
+    const { usuario, clave, nombre, rol, cuadrilla_id } = req.body || {};
+    if (typeof usuario !== "string" || typeof clave !== "string"
+        || typeof nombre !== "string" || !usuario.trim() || !clave || !nombre.trim() || !rol) {
       return res.status(400).json({ error: "Todos los campos son obligatorios" });
     }
     if (!["funcionario", "cuadrilla"].includes(rol)) {
       return res.status(400).json({ error: "El rol debe ser 'funcionario' o 'cuadrilla'" });
     }
-    if (clave.length < 6) {
-      return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
+    if (clave.length < 8) {
+      return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
     }
 
     const usuarioNorm = String(usuario).trim().toLowerCase();
+    if (usuarioNorm.length > 100 || nombre.trim().length > 150) {
+      return res.status(400).json({ error: "El usuario no puede superar 100 caracteres y el nombre 150" });
+    }
+    const cid = rol === "cuadrilla" ? cuadrilla_id : null;
+    if (rol === "cuadrilla") {
+      if (typeof cid !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cid)) {
+        return res.status(400).json({ error: "Selecciona una cuadrilla válida" });
+      }
+      const cuadrilla = await pool.query(
+        "SELECT 1 FROM cuadrillas WHERE id = $1 AND activa = TRUE",
+        [cid]
+      );
+      if (!cuadrilla.rows.length) {
+        return res.status(400).json({ error: "La cuadrilla no existe o está inactiva" });
+      }
+    }
     const claveHash = await hashClave(clave);
-    const cid = rol === "cuadrilla" ? (cuadrilla_id || null) : null;
 
     const { rows } = await pool.query(`
-      INSERT INTO usuarios (usuario, nombre, clave_hash, rol, cuadrilla_id, activo)
-      VALUES ($1, $2, $3, $4, $5, TRUE)
-      ON CONFLICT (usuario) DO UPDATE SET
-        nombre = EXCLUDED.nombre,
-        clave_hash = EXCLUDED.clave_hash,
-        rol = EXCLUDED.rol,
-        cuadrilla_id = EXCLUDED.cuadrilla_id,
-        activo = TRUE
-      RETURNING id, usuario, nombre, rol, cuadrilla_id, activo
+      WITH guardado AS (
+        INSERT INTO usuarios (usuario, nombre, clave_hash, rol, cuadrilla_id, activo)
+        VALUES ($1, $2, $3, $4, $5, TRUE)
+        ON CONFLICT (usuario) DO UPDATE SET
+          nombre = EXCLUDED.nombre,
+          clave_hash = EXCLUDED.clave_hash,
+          rol = EXCLUDED.rol,
+          cuadrilla_id = EXCLUDED.cuadrilla_id,
+          activo = TRUE
+        RETURNING id, usuario, nombre, rol, cuadrilla_id, activo, (xmax = 0) AS creado
+      ),
+      sesiones_invalidas AS (
+        DELETE FROM sesiones WHERE usuario_id = (SELECT id FROM guardado) RETURNING id
+      )
+      SELECT guardado.*, (SELECT count(*)::int FROM sesiones_invalidas) AS sesiones_revocadas
+      FROM guardado
     `, [usuarioNorm, nombre.trim(), claveHash, rol, cid]);
 
-    res.status(201).json(rows[0]);
+    res.status(rows[0].creado ? 201 : 200).json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "No se pudo registrar el usuario" });
@@ -153,7 +180,10 @@ router.post("/usuarios", requerirSesion(["funcionario"]), async (req, res) => {
 router.patch("/usuarios/:id/estado", requerirSesion(["funcionario"]), async (req, res) => {
   try {
     const { id } = req.params;
-    const { activo } = req.body;
+    const { activo } = req.body || {};
+    if (typeof activo !== "boolean") {
+      return res.status(400).json({ error: "El estado activo debe ser verdadero o falso" });
+    }
 
     if (req.usuario.id === id && !activo) {
       return res.status(400).json({ error: "No puedes desactivar tu propia cuenta en uso" });

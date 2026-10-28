@@ -44,7 +44,9 @@ function ReporteCiudadano() {
     descripcion,
     setDescripcion,
     fotoPreview,
+    fotoInputRef,
     manejarFoto,
+    quitarFoto,
     manejarEnvio,
     estadoRespuesta,
     enviando
@@ -133,9 +135,20 @@ function ReporteCiudadano() {
 
             <div className="campo-reporte">
               <label htmlFor="foto-dano">Fotografía <span className="opcional">OPCIONAL</span></label>
-              <input id="foto-dano" type="file" accept="image/*" onChange={manejarFoto} />
-              {fotoPreview && <img id="foto-preview" src={fotoPreview} alt="Vista previa de la fotografía del daño" />}
-              <span className="ayuda-foto">Formatos de imagen · Máximo 8 MB</span>
+              <input
+                ref={fotoInputRef}
+                id="foto-dano"
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                onChange={manejarFoto}
+              />
+              {fotoPreview && (
+                <>
+                  <img id="foto-preview" src={fotoPreview} alt="Vista previa de la fotografía del daño" />
+                  <button type="button" className="btn-quitar-foto" onClick={quitarFoto}>Quitar fotografía</button>
+                </>
+              )}
+              <span className="ayuda-foto">JPG, PNG o WEBP · Máximo 8 MB</span>
             </div>
 
             <button type="submit" className="btn-enviar" disabled={!posicion || enviando}>

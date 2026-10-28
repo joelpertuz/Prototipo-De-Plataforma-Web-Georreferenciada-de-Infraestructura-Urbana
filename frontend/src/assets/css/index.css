@@ -303,6 +303,22 @@
   object-fit: cover;
 }
 
+.vista-reporte .btn-quitar-foto {
+  align-self: flex-start;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 123, 149, 0.45);
+  border-radius: 6px;
+  background: rgba(255, 51, 102, 0.1);
+  color: #ff9aad;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.vista-reporte .btn-quitar-foto:hover {
+  background: rgba(255, 51, 102, 0.2);
+}
+
 .vista-reporte button.btn-enviar {
   width: 100%;
   margin-top: 4px;

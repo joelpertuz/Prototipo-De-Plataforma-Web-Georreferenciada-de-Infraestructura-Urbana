@@ -25,8 +25,9 @@ router.get("/", requerirSesion(["funcionario", "cuadrilla"]), async (req, res) =
 // POST /api/cuadrillas -> registrar una cuadrilla nueva (solo funcionarios)
 router.post("/", requerirSesion(["funcionario"]), async (req, res) => {
   try {
-    const nombre = (req.body.nombre || "").trim();
-    const zona = (req.body.zona_asignada || "").trim();
+    const body = req.body || {};
+    const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
+    const zona = typeof body.zona_asignada === "string" ? body.zona_asignada.trim() : "";
 
     if (!nombre) {
       return res.status(400).json({ error: "El nombre de la cuadrilla es obligatorio" });

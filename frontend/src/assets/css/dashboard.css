@@ -140,6 +140,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.vista-dashboard .actualizacion-info {
+  margin: -10px 0 -4px;
+  color: var(--cyber-muted);
+  font-size: 11px;
 }
 
 /* Botón alternar mapa (Toggle mapa) */
@@ -164,6 +172,13 @@
   background: rgba(56, 189, 248, 0.25);
   border-color: var(--cyber-cyan);
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+.vista-dashboard .btn-toggle-mapa:disabled,
+.vista-dashboard .btn-cyber-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  box-shadow: none;
 }
 
 .vista-dashboard .btn-toggle-mapa.inactivo {
@@ -517,6 +532,31 @@
   border-radius: 8px;
 }
 
+.vista-dashboard .paginacion-reportes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--cyber-muted);
+  font-size: 11px;
+}
+
+.vista-dashboard .paginacion-reportes button {
+  padding: 6px 9px;
+  border: 1px solid var(--cyber-border);
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--cyber-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.vista-dashboard .paginacion-reportes button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---------------------------------------------------------
    SECCIÓN DE CUADRILLAS
    --------------------------------------------------------- */
@@ -694,6 +734,21 @@
 .custom-cyber-marker {
   background: transparent !important;
   border: none !important;
+}
+
+.cluster-marker {
+  display: grid;
+  place-items: center;
+  border: 2px solid #e0f2fe;
+  border-radius: 50%;
+  background: rgba(3, 105, 161, 0.92);
+  box-shadow: 0 0 0 5px rgba(56, 189, 248, 0.2), 0 4px 12px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font: 700 13px var(--cyber-mono);
+}
+
+.cluster-marker span {
+  line-height: 1;
 }
 
 .cyber-pin {
@@ -900,6 +955,7 @@
 
 /* Tarjeta destacada de Administración de Usuarios en la barra lateral */
 .vista-dashboard .admin-banner-card {
+  width: 100%;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(15, 23, 42, 0.95));
   border: 1px solid rgba(16, 185, 129, 0.45);
   border-radius: 10px;
@@ -912,6 +968,9 @@
   overflow: hidden;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 14px rgba(16, 185, 129, 0.15);
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }
 
 .vista-dashboard .admin-banner-card:hover {
@@ -1272,5 +1331,26 @@
   .admin-grid {
     grid-template-columns: 1fr;
   }
+  .vista-dashboard aside {
+    padding: 16px 14px 30px;
+  }
+  .vista-dashboard .hud-header {
+    align-items: flex-start;
+  }
+  .vista-dashboard .hud-actions-top {
+    justify-content: flex-start;
+  }
+  .vista-dashboard .map-hud-overlay {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .vista-dashboard.mapa-oculto aside {
+    padding: 18px 14px 40px;
+  }
+  .vista-dashboard.mapa-oculto .lista-reportes-scroll {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
-

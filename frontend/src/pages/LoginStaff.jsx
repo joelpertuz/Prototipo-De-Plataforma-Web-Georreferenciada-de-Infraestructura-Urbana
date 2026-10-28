@@ -16,7 +16,7 @@ function LoginStaff() {
         <h1>Acceso del Personal</h1>
         <p className="sub">Alcaldía de San Andrés de Sotavento · Obras Públicas</p>
 
-        {error && <div className="mensaje" style={{ display: 'block' }}>{error}</div>}
+        {error && <div className="mensaje" style={{ display: 'block' }} role="alert">{error}</div>}
 
         <form onSubmit={manejarLogin}>
           <div className="campo">

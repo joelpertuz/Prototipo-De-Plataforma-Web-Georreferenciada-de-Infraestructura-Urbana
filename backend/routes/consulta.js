@@ -42,10 +42,17 @@ router.get("/:codigo", limitar, async (req, res) => {
 
     const { rows } = await pool.query(
       `SELECT r.codigo_seguimiento, r.tipo_dano, r.estado, r.fecha_creacion, r.fecha_actualizacion,
-              e.foto_antes_url, e.foto_despues_url, e.fecha_cierre
+              e.foto_antes_url, e.foto_despues_url, e.fecha_cierre,
+              COALESCE(
+                json_agg(json_build_object('estado', h.estado, 'fecha', h.fecha) ORDER BY h.fecha, h.id)
+                  FILTER (WHERE h.id IS NOT NULL),
+                '[]'::json
+              ) AS historial
        FROM reportes r
        LEFT JOIN evidencias e ON e.reporte_id = r.id
-       WHERE r.codigo_seguimiento = $1`,
+       LEFT JOIN historial_estados h ON h.reporte_id = r.id
+       WHERE r.codigo_seguimiento = $1
+       GROUP BY r.id, e.foto_antes_url, e.foto_despues_url, e.fecha_cierre`,
       [codigo]
     );
     if (rows.length === 0) {
@@ -59,6 +66,7 @@ router.get("/:codigo", limitar, async (req, res) => {
       estado: r.estado,
       fecha_creacion: r.fecha_creacion,
       fecha_actualizacion: r.fecha_actualizacion,
+      historial: r.historial,
       // Las fotos del cierre solo se muestran si el reporte está resuelto
       cierre: r.estado === "resuelto" && r.foto_despues_url
         ? { fecha: r.fecha_cierre, foto_antes_url: r.foto_antes_url, foto_despues_url: r.foto_despues_url }

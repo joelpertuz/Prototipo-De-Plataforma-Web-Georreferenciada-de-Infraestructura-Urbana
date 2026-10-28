@@ -1,73 +1,109 @@
-# Plataforma Vial y Alumbrado — San Andrés de Sotavento
+# Plataforma Vial y Alumbrado
 
-Prototipo funcional (MVP) del módulo 1: **captura ciudadana**. Ya corre de extremo a extremo: mapa real, formulario, API y base de datos geoespacial.
+Aplicación web para registrar daños viales y de alumbrado en San Andrés de Sotavento, consultar su atención y gestionar su asignación a cuadrillas.
 
-## Estructura
+> **Estado:** proyecto finalizado. Las instrucciones siguientes describen cómo instalar, configurar, validar y ejecutar la aplicación.
 
+## Componentes
+
+- `frontend/`: aplicación React, Vite y React Leaflet.
+- `backend/`: API REST con Express y PostgreSQL/PostGIS.
+- `backend/db/schema.sql`: esquema para una base de datos nueva.
+- `backend/db/migrations/`: cambios SQL que deben aplicarse a bases existentes.
+
+## Herramientas y tecnologías utilizadas
+
+- **Frontend:** JavaScript (ES modules), React 19, Vite, React Router, Leaflet, React Leaflet y Leaflet.heat.
+- **Backend:** Node.js, Express, Multer para cargas de imágenes y `pg` para acceder a PostgreSQL.
+- **Datos y mapas:** PostgreSQL, PostGIS, SQL y Leaflet.
+- **Calidad y validación:** Oxlint, Vite Build y pruebas de API con el ejecutor integrado `node:test`.
+- **Control de versiones:** Git y GitHub.
+
+## Requisitos
+
+- Node.js y npm.
+- PostgreSQL con PostGIS y la extensión `uuid-ossp`.
+- `psql` disponible para crear o actualizar el esquema.
+
+## Instalación inicial
+
+1. Crea una base de datos llamada `vial_sas` (o configura otro nombre en el backend) y carga el esquema:
+
+   ```sh
+   createdb vial_sas
+   psql -d vial_sas -f backend/db/schema.sql
+   ```
+
+2. Configura el backend. Copia `backend/.env.example` a `backend/.env` y define las credenciales reales de PostgreSQL. No publiques ese archivo. En producción, configura también `CORS_ORIGINS` con los orígenes web autorizados y `UPLOADS_DIR` con una ruta persistente para las fotografías.
+
+3. Instala dependencias e inicia la API:
+
+   ```sh
+   cd backend
+   npm install
+   npm start
+   ```
+
+   La comprobación de salud está disponible en `http://localhost:3001/api/salud`.
+
+4. En otra terminal, instala e inicia el frontend:
+
+   ```sh
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+   Vite mostrará la dirección local en la que abrir la aplicación.
+
+5. Crea una cuenta inicial de funcionario con una contraseña de al menos 8 caracteres:
+
+   ```sh
+   cd backend
+   node crear_usuario.js funcionario1 "CAMBIA_ESTA_CLAVE" funcionario "Nombre del funcionario"
+   ```
+
+   Crea primero una cuadrilla desde el panel antes de generar una cuenta con rol `cuadrilla`.
+
+## Actualizar una base existente
+
+Aplica las migraciones en orden antes de desplegar la versión actual:
+
+```sh
+psql -d vial_sas -f backend/db/migrations/001_historial_estados.sql
+psql -d vial_sas -f backend/db/migrations/002_reportes_indices.sql
 ```
-proyecto-vial-sas/
-├── backend/
-│   ├── server.js          # servidor Express
-│   ├── routes/reportes.js # endpoints de la API
-│   ├── db/schema.sql      # esquema PostgreSQL + PostGIS
-│   ├── db/pool.js         # conexión a la base de datos
-│   └── .env.example       # copia esto a .env y ajusta tus credenciales
-└── frontend/
-    └── index.html         # mapa + formulario de reporte (ábrelo directo en el navegador)
+
+Los reportes existentes se incorporan con su estado actual como primer registro; los cambios anteriores a la migración no pueden reconstruirse.
+
+## Variables del frontend
+
+El archivo opcional `frontend/.env.local` admite:
+
+- `VITE_API_URL`: URL base de la API, incluyendo `/api`. Por defecto, `http://localhost:3001/api`.
+- `VITE_API_ORIGIN`: origen para cargar fotografías. Por defecto, se deriva de `VITE_API_URL`.
+
+## Funcionalidad disponible
+
+- Reporte ciudadano con ubicación en mapa, descripción y fotografía opcional.
+- Código de seguimiento público con historial de estados y evidencia fotográfica de cierre.
+- Panel de funcionarios con filtros, búsqueda, lista paginada, prioridades, mapa de calor, agrupación de marcadores y asignación de cuadrillas.
+- Gestión de usuarios para funcionarios y operarios.
+- Cierre de tareas de cuadrilla con evidencia «antes/después» y observaciones.
+
+## Validación local
+
+Desde `frontend/`:
+
+```sh
+npm run lint
+npm run build
 ```
 
-## Cómo correrlo (primera vez)
+Desde `backend/`, ejecuta las pruebas de API (usan un pool PostgreSQL simulado y no modifican datos reales):
 
-### 1. Base de datos
-
-Necesitas PostgreSQL con la extensión PostGIS. Si no la tienes instalada:
-
-```bash
-# Ubuntu/Debian
-sudo apt install postgresql postgresql-contrib postgis
-
-# crea la base de datos
-createdb vial_sas
+```sh
+npm test
 ```
 
-Carga el esquema:
-
-```bash
-psql -d vial_sas -f backend/db/schema.sql
-```
-
-### 2. Backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env      # ajusta usuario/contraseña si es necesario
-npm start
-```
-
-Deberías ver: `API escuchando en http://localhost:3001`
-
-Pruébalo: abre `http://localhost:3001/api/salud` en el navegador — debe responder `{"estado":"ok",...}`.
-
-### 3. Frontend
-
-No necesita instalación. Simplemente abre `frontend/index.html` directamente en tu navegador (doble clic, o arrástralo a una pestaña). Ya viene apuntando a `http://localhost:3001`.
-
-Toca el mapa para marcar un daño, llena el formulario y envíalo — el reporte queda guardado en la base de datos con su código de seguimiento.
-
-## Qué ya funciona
-
-- Mapa real de San Andrés de Sotavento (Leaflet + OpenStreetMap, sin costos de licencia).
-- Captura de coordenadas GPS exactas al tocar el mapa.
-- Formulario de reporte (tipo de daño, descripción).
-- API REST que guarda el reporte en PostGIS y genera un código único de seguimiento.
-- Endpoint de consulta pública por código (`GET /api/reportes/codigo/:codigo`).
-- Endpoint de listado para un futuro dashboard (`GET /api/reportes`, con filtro `?estado=`).
-- Endpoint de actualización de estado para el panel de despacho (`PATCH /api/reportes/:id`).
-
-## Qué falta (siguientes pasos del MVP)
-
-- Dashboard visual para la Secretaría (mapa de calor + pines por estado).
-- Modo offline-first en el frontend (guardar en el navegador y sincronizar después).
-- Módulo de cuadrillas (registro de evidencia antes/después).
-- Subida real de fotos (hoy el campo existe pero no está conectado a almacenamiento).
+Las pruebas automatizadas cubren autenticación y roles, filtros y paginación de reportes, transiciones de estado, asignación de cuadrillas y cierre con evidencia. La compilación y el lint del frontend se ejecutan localmente con los comandos anteriores. La validación automatizada no reemplaza una prueba de integración con una instancia real de PostgreSQL/PostGIS.

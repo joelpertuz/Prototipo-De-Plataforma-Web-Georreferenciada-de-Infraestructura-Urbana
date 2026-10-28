@@ -1,11 +1,11 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat';
 import 'leaflet/dist/leaflet.css';
 import '../assets/css/dashboard.css';
-import { useDashboard } from '../hooks/useDashboard';
+import { useDashboard, ESTADOS } from '../hooks/useDashboard';
 import { api, API_ORIGEN } from '../services/api';
 
 const CENTRO_INICIAL = [9.1460, -75.5088];
@@ -20,6 +20,12 @@ const URGENCIAS = {
   alta: { label: "Alta", peso: 3, radio: 14, clase: "urg-alta" },
   media: { label: "Media", peso: 2, radio: 10, clase: "urg-media" },
   baja: { label: "Baja", peso: 1, radio: 8, clase: "urg-baja" }
+};
+
+const SIGUIENTE_ESTADO = {
+  pendiente: 'en_inspeccion',
+  en_inspeccion: 'en_reparacion',
+  en_reparacion: 'resuelto'
 };
 
 // Capas de mapas fiables y 100% gratuitas sin límites de API
@@ -108,13 +114,165 @@ function CapaCalor({ reportes, mostrar }) {
   return null;
 }
 
+function crearIconoReporte(reporte, estaSeleccionado) {
+  const estadoColor = ESTADOS[reporte.estado]?.color || '#00f0ff';
+  const esAlta = reporte.urgencia === 'alta' && reporte.estado !== 'resuelto';
+  return L.divIcon({
+    className: 'custom-cyber-marker',
+    html: `
+      <div class="cyber-pin ${esAlta ? 'pulse-high' : ''} ${estaSeleccionado ? 'pin-selected' : ''}" style="--pin-color: ${estadoColor};">
+        <div class="pin-ring"></div>
+        <div class="pin-core" style="background: ${estadoColor};"></div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18]
+  });
+}
+
+function MarcadoresAgrupados({
+  reportes,
+  reporteSeleccionadoId,
+  alSeleccionar,
+  markerRefs,
+  cuadrillas,
+  actualizarReporte,
+  guardandoFormPopup
+}) {
+  const map = useMap();
+  const zoom = useSyncExternalStore(
+    notificar => {
+      map.on('zoomend', notificar);
+      return () => map.off('zoomend', notificar);
+    },
+    () => map.getZoom(),
+    () => map.getZoom()
+  );
+
+  const grupos = useMemo(() => {
+    const celdas = new Map();
+    for (const reporte of reportes) {
+      if (!Number.isFinite(reporte.latitud) || !Number.isFinite(reporte.longitud)) continue;
+      const punto = map.project([reporte.latitud, reporte.longitud], zoom);
+      const llave = `${Math.floor(punto.x / 56)}:${Math.floor(punto.y / 56)}`;
+      if (!celdas.has(llave)) celdas.set(llave, []);
+      celdas.get(llave).push(reporte);
+    }
+    return [...celdas.values()];
+  }, [map, reportes, zoom]);
+
+  return grupos.map(grupo => {
+    if (grupo.length > 1 && !grupo.some(r => r.id === reporteSeleccionadoId)) {
+      const centro = grupo.reduce(
+        (total, r) => [total[0] + r.latitud / grupo.length, total[1] + r.longitud / grupo.length],
+        [0, 0]
+      );
+      const icono = L.divIcon({
+        className: 'cluster-marker',
+        html: `<span>${grupo.length}</span>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+      return (
+        <Marker
+          key={`cluster-${grupo.map(r => r.id).sort().join('-')}`}
+          position={centro}
+          icon={icono}
+          title={`${grupo.length} reportes agrupados. Selecciona para acercar el mapa.`}
+          alt={`${grupo.length} reportes agrupados`}
+          eventHandlers={{
+            click: () => {
+              const bounds = L.latLngBounds(grupo.map(r => [r.latitud, r.longitud]));
+              if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+                map.setView(centro, Math.min(map.getZoom() + 2, 19));
+              } else {
+                map.fitBounds(bounds, { padding: [48, 48], maxZoom: Math.min(map.getZoom() + 3, 19) });
+              }
+            }
+          }}
+        />
+      );
+    }
+
+    return grupo.map(reporte => (
+      <Marker
+        key={reporte.id}
+        ref={marker => {
+          if (marker) markerRefs.current[reporte.id] = marker;
+          else delete markerRefs.current[reporte.id];
+        }}
+        position={[reporte.latitud, reporte.longitud]}
+        icon={crearIconoReporte(reporte, reporte.id === reporteSeleccionadoId)}
+        title={`${reporte.codigo_seguimiento}: ${TIPOS[reporte.tipo_dano] || reporte.tipo_dano}`}
+        alt={`Reporte ${reporte.codigo_seguimiento}`}
+        eventHandlers={{ click: () => alSeleccionar(reporte.id) }}
+      >
+        <Popup>
+          <div className="popup">
+            <h3>
+              <span>{reporte.codigo_seguimiento}</span>
+              <span style={{ fontSize: '11px', color: ESTADOS[reporte.estado]?.color }}>
+                {ESTADOS[reporte.estado]?.label}
+              </span>
+            </h3>
+            <div className="meta">
+              {TIPOS[reporte.tipo_dano] || reporte.tipo_dano} · Urgencia {(URGENCIAS[reporte.urgencia] || URGENCIAS.media).label}
+            </div>
+            <p>{reporte.descripcion || <span style={{ opacity: 0.6 }}>Sin descripción adicional.</span>}</p>
+            {reporte.foto_url && (
+              <img className="foto-reporte" src={`${API_ORIGEN}${reporte.foto_url}`} alt="Evidencia fotográfica" />
+            )}
+            <form onSubmit={(e) => actualizarReporte(e, reporte)}>
+              <div className="field">
+                <label htmlFor={`estado-${reporte.id}`}>Estado de la obra</label>
+                <select id={`estado-${reporte.id}`} name="estado" defaultValue={reporte.estado}>
+                  {Object.entries(ESTADOS)
+                    .filter(([clave]) => clave === reporte.estado
+                      || (clave === SIGUIENTE_ESTADO[reporte.estado] && clave !== 'resuelto'))
+                    .map(([clave, valor]) => (
+                    <option key={clave} value={clave}>{valor.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor={`urgencia-${reporte.id}`}>Nivel de urgencia</label>
+                <select id={`urgencia-${reporte.id}`} name="urgencia" defaultValue={reporte.urgencia}>
+                  {Object.entries(URGENCIAS).map(([clave, valor]) => (
+                    <option key={clave} value={clave}>{valor.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor={`cuadrilla-${reporte.id}`}>Cuadrilla asignada</label>
+                <select id={`cuadrilla-${reporte.id}`} name="cuadrilla" defaultValue={reporte.cuadrilla_id || ""}>
+                  <option value="">Sin asignar</option>
+                  {cuadrillas.map(cuadrilla => (
+                    <option key={cuadrilla.id} value={cuadrilla.id}>
+                      {cuadrilla.nombre} ({cuadrilla.zona_asignada || 'General'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="btn-solid" disabled={guardandoFormPopup}>
+                {guardandoFormPopup ? 'Actualizando...' : 'Guardar modificaciones'}
+              </button>
+            </form>
+          </div>
+        </Popup>
+      </Marker>
+    ));
+  });
+}
+
 function DashboardObras() {
   const {
-    reportes,
     cuadrillas,
     estadosVisibles,
     filtroTipo,
     setFiltroTipo,
+    buscarTexto,
+    setBuscarTexto,
     mostrarCalor,
     setMostrarCalor,
     banner,
@@ -123,17 +281,23 @@ function DashboardObras() {
     nuevaCuadZona,
     setNuevaCuadZona,
     guardandoFormPopup,
+    cargando,
+    actualizadoEn,
+    creandoCuadrilla,
+    cargarDatos,
     reportesVisibles,
     alternarEstado,
     crearCuadrilla,
     actualizarReporte,
     errorAccion,
-    ESTADOS
+    resumen,
+    pagina,
+    setPagina,
+    paginacion
   } = useDashboard();
 
   const [mostrarMapa, setMostrarMapa] = useState(true);
   const [capaActiva, setCapaActiva] = useState('calles');
-  const [buscarTexto, setBuscarTexto] = useState('');
   const [reporteSeleccionadoId, setReporteSeleccionadoId] = useState(null);
   const [destinoCamara, setDestinoCamara] = useState(null);
 
@@ -212,7 +376,12 @@ function DashboardObras() {
       const res = await api.crearUsuario(nuevoUser);
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setMsgAdmin({ texto: `Usuario "${nuevoUser.usuario}" guardado exitosamente.`, tipo: 'ok' });
+        setMsgAdmin({
+          texto: data.creado
+            ? `Se creó la cuenta "${nuevoUser.usuario}".`
+            : `Se actualizaron las credenciales de "${nuevoUser.usuario}" y se cerraron sus sesiones activas.`,
+          tipo: 'ok'
+        });
         setNuevoUser({ usuario: '', clave: '', nombre: '', rol: 'cuadrilla', cuadrilla_id: '' });
         cargarUsuarios();
       } else {
@@ -258,37 +427,9 @@ function DashboardObras() {
     }
   };
 
-  // Crear iconos de marcador neón
-  const crearIcono = (r, estaSeleccionado) => {
-    const estadoColor = ESTADOS[r.estado]?.color || '#00f0ff';
-    const esAlta = r.urgencia === 'alta' && r.estado !== 'resuelto';
-
-    return L.divIcon({
-      className: 'custom-cyber-marker',
-      html: `
-        <div class="cyber-pin ${esAlta ? 'pulse-high' : ''} ${estaSeleccionado ? 'pin-selected' : ''}" style="--pin-color: ${estadoColor};">
-          <div class="pin-ring"></div>
-          <div class="pin-core" style="background: ${estadoColor};"></div>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-      popupAnchor: [0, -18]
-    });
-  };
-
   // Filtrado y ordenamiento de la lista ("Por atender primero")
   const listaReportesOrdenados = useMemo(() => {
-    const q = buscarTexto.trim().toLowerCase();
     return reportesVisibles
-      .filter(r => {
-        if (!q) return true;
-        return (
-          r.codigo_seguimiento?.toLowerCase().includes(q) ||
-          r.descripcion?.toLowerCase().includes(q) ||
-          (TIPOS[r.tipo_dano] || '').toLowerCase().includes(q)
-        );
-      })
       .slice()
       .sort((a, b) => {
         const ra = a.estado === 'resuelto' ? 1 : 0;
@@ -299,7 +440,7 @@ function DashboardObras() {
         if (ua !== ub) return ub - ua;
         return new Date(a.fecha_creacion) - new Date(b.fecha_creacion);
       });
-  }, [reportesVisibles, buscarTexto]);
+  }, [reportesVisibles]);
 
   // Manejar clic en un reporte de la lista
   const seleccionarReporte = (r) => {
@@ -308,32 +449,25 @@ function DashboardObras() {
       setMostrarMapa(true);
     }
     setDestinoCamara([r.latitud, r.longitud]);
-    const marker = markerRefs.current[r.id];
-    if (marker) {
-      setTimeout(() => {
-        marker.openPopup();
-      }, 350);
-    }
+    setTimeout(() => markerRefs.current[r.id]?.openPopup(), 450);
   };
 
   // Métricas rápidas KPI
   const metricas = useMemo(() => {
-    const abiertos = reportes.filter(r => r.estado !== 'resuelto');
-    const altaUrgencia = abiertos.filter(r => r.urgencia === 'alta').length;
-    const enReparacion = reportes.filter(r => r.estado === 'en_reparacion').length;
+    const estados = resumen.byStatus || {};
     return {
-      abiertos: abiertos.length,
-      altaUrgencia,
-      enReparacion,
+      abiertos: Object.entries(estados).reduce((total, [estado, cantidad]) => total + (estado === 'resuelto' ? 0 : cantidad), 0),
+      altaUrgencia: resumen.urgent || 0,
+      enReparacion: resumen.inRepair || 0,
       cuadrillas: cuadrillas.length
     };
-  }, [reportes, cuadrillas]);
+  }, [resumen, cuadrillas]);
 
   return (
     <main className={`vista-dashboard ${!mostrarMapa ? 'mapa-oculto' : ''}`}>
       {/* ---------------- BARRA LATERAL HUD ---------------- */}
       <aside aria-label="Centro de Operaciones Vial">
-        {banner && <div id="banner">{banner}</div>}
+        {banner && <div id="banner" role="status">{banner}</div>}
         {errorAccion && <div className="msg-admin err" role="alert">{errorAccion}</div>}
 
         {/* Cabecera del Centro de Mando con botón de alternancia */}
@@ -344,6 +478,15 @@ function DashboardObras() {
           </div>
 
           <div className="hud-actions-top">
+            <button
+              type="button"
+              className="btn-toggle-mapa"
+              onClick={cargarDatos}
+              disabled={cargando}
+              title="Actualizar reportes y cuadrillas"
+            >
+              {cargando ? 'Actualizando…' : '↻ Actualizar'}
+            </button>
             {/* Botón exclusivo de administración para Secretaría */}
             {esSecretaria && (
               <button
@@ -368,10 +511,13 @@ function DashboardObras() {
               <span>{mostrarMapa ? '🗺️ Ocultar' : '🗺️ Ver Mapa'}</span>
             </button>
             <div className="hud-live-tag">
-              <span className="hud-live-dot"></span> EN VIVO
+              <span className="hud-live-dot"></span> ACTUALIZACIÓN AUTOMÁTICA
             </div>
           </div>
         </div>
+        <p className="actualizacion-info" aria-live="polite">
+          {actualizadoEn ? `Datos actualizados ${tiempoRelativo(actualizadoEn)}` : 'Cargando información…'}
+        </p>
 
         {/* Aviso si el mapa está oculto con botón rápido para restaurarlo */}
         {!mostrarMapa && (
@@ -405,14 +551,13 @@ function DashboardObras() {
 
         {/* TARJETA DESTACADA DE ADMINISTRACIÓN DE USUARIOS (SECRETARÍA EXCLUSIVO) */}
         {esSecretaria && (
-          <div
+          <button
+            type="button"
             className="admin-banner-card"
             onClick={() => {
               setModalUsuarios(true);
               cargarUsuarios();
             }}
-            role="button"
-            tabIndex={0}
             title="Administración de cuentas y accesos del personal"
           >
             <div className="admin-banner-icon">🛡️</div>
@@ -424,7 +569,7 @@ function DashboardObras() {
               <span className="admin-banner-sub">Gestión de usuarios y accesos al sistema</span>
             </div>
             <div className="admin-banner-arrow">&rarr;</div>
-          </div>
+          </button>
         )}
 
         {/* Estado de los reportes con contadores interactivos */}
@@ -440,12 +585,15 @@ function DashboardObras() {
                 type="button"
                 className="estado-btn"
                 aria-pressed={estadosVisibles.has(clave)}
-                onClick={() => alternarEstado(clave)}
+                onClick={() => {
+                  alternarEstado(clave);
+                  setPagina(1);
+                }}
               >
                 <span className="dot" style={{ background: e.color, color: e.color }}></span>
                 <span className="txt">
                   <span className="n">
-                    {reportes.filter(r => r.estado === clave && (!filtroTipo || r.tipo_dano === filtroTipo)).length}
+                    {resumen.byStatus?.[clave] || 0}
                   </span>
                   <span className="l">{e.label}</span>
                 </span>
@@ -462,7 +610,10 @@ function DashboardObras() {
           <select
             className="cyber-select"
             value={filtroTipo}
-            onChange={(e) => setFiltroTipo(e.target.value)}
+            onChange={(e) => {
+              setFiltroTipo(e.target.value);
+              setPagina(1);
+            }}
           >
             <option value="">Todos los tipos de daño</option>
             <option value="hueco_vial">Hueco o vía deteriorada</option>
@@ -474,7 +625,7 @@ function DashboardObras() {
         {/* LISTA DE REPORTES ("POR ATENDER PRIMERO") */}
         <div className="seccion-reportes">
           <div className="seccion-titulo">
-            <span>Reportes Prioritarios ({listaReportesOrdenados.length})</span>
+            <span>Reportes prioritarios ({paginacion.total})</span>
             {!mostrarMapa && <span style={{ fontSize: '11px', color: 'var(--cyber-cyan)' }}>Vista Expandida</span>}
           </div>
           <div className="buscador-wrap">
@@ -484,7 +635,10 @@ function DashboardObras() {
               className="buscador-input"
               placeholder="Buscar por código o descripción..."
               value={buscarTexto}
-              onChange={(e) => setBuscarTexto(e.target.value)}
+              onChange={(e) => {
+                setBuscarTexto(e.target.value);
+                setPagina(1);
+              }}
             />
           </div>
 
@@ -525,6 +679,25 @@ function DashboardObras() {
               })
             )}
           </ul>
+          {paginacion.totalPages > 1 && (
+            <nav className="paginacion-reportes" aria-label="Paginación de reportes">
+              <button
+                type="button"
+                onClick={() => setPagina(pagina - 1)}
+                disabled={pagina === 1 || cargando}
+              >
+                Anterior
+              </button>
+              <span>Página {pagina} de {paginacion.totalPages}</span>
+              <button
+                type="button"
+                onClick={() => setPagina(pagina + 1)}
+                disabled={pagina === paginacion.totalPages || cargando}
+              >
+                Siguiente
+              </button>
+            </nav>
+          )}
         </div>
 
         {/* Cuadrillas en Terreno */}
@@ -537,7 +710,7 @@ function DashboardObras() {
               <li className="reporte-item-vacio">Sin cuadrillas registradas.</li>
             ) : (
               cuadrillas.map(c => {
-                const abiertos = reportes.filter(r => r.cuadrilla_id === c.id && r.estado !== 'resuelto').length;
+                const abiertos = resumen.byCrew?.find(item => item.cuadrilla_id === c.id)?.cantidad || 0;
                 return (
                   <li key={c.id} className="cuadrilla-item">
                     <div>
@@ -571,8 +744,8 @@ function DashboardObras() {
                 onChange={(e) => setNuevaCuadZona(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-cyber-submit">
-              + Desplegar Cuadrilla
+            <button type="submit" className="btn-cyber-submit" disabled={creandoCuadrilla}>
+              {creandoCuadrilla ? 'Creando…' : '+ Crear cuadrilla'}
             </button>
           </form>
         </div>
@@ -663,76 +836,15 @@ function DashboardObras() {
           <RedimensionadorMapa activo={mostrarMapa} />
           <CapaCalor reportes={reportesVisibles} mostrar={mostrarCalor} />
 
-          {reportesVisibles.map(r => {
-            const estaSeleccionado = r.id === reporteSeleccionadoId;
-
-            return (
-              <Marker
-                key={r.id}
-                ref={(el) => {
-                  if (el) markerRefs.current[r.id] = el;
-                }}
-                position={[r.latitud, r.longitud]}
-                icon={crearIcono(r, estaSeleccionado)}
-                eventHandlers={{
-                  click: () => setReporteSeleccionadoId(r.id)
-                }}
-              >
-                <Popup>
-                  <div className="popup">
-                    <h3>
-                      <span>{r.codigo_seguimiento}</span>
-                      <span style={{ fontSize: '11px', color: ESTADOS[r.estado]?.color }}>
-                        {ESTADOS[r.estado]?.label}
-                      </span>
-                    </h3>
-                    <div className="meta">
-                      {TIPOS[r.tipo_dano] || r.tipo_dano} · Urgencia {(URGENCIAS[r.urgencia] || URGENCIAS.media).label}
-                    </div>
-                    <p>{r.descripcion || <span style={{ opacity: 0.6 }}>Sin descripción adicional.</span>}</p>
-
-                    {r.foto_url && (
-                      <img className="foto-reporte" src={`${API_ORIGEN}${r.foto_url}`} alt="Evidencia fotográfica" />
-                    )}
-
-                    <form onSubmit={(e) => actualizarReporte(e, r)}>
-                      <div className="field">
-                        <label>Estado de la obra</label>
-                        <select name="estado" defaultValue={r.estado}>
-                          {Object.entries(ESTADOS).map(([k, v]) => (
-                            <option key={k} value={k}>{v.label}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="field">
-                        <label>Nivel de urgencia</label>
-                        <select name="urgencia" defaultValue={r.urgencia}>
-                          {Object.entries(URGENCIAS).map(([k, v]) => (
-                            <option key={k} value={k}>{v.label}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="field">
-                        <label>Cuadrilla asignada</label>
-                        <select name="cuadrilla" defaultValue={r.cuadrilla_id || ""}>
-                          <option value="">Sin asignar</option>
-                          {cuadrillas.map(c => (
-                            <option key={c.id} value={c.id}>{c.nombre} ({c.zona_asignada || 'General'})</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <button type="submit" className="btn-solid" disabled={guardandoFormPopup}>
-                        {guardandoFormPopup ? 'Actualizando...' : 'Guardar Modificaciones'}
-                      </button>
-                    </form>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+          <MarcadoresAgrupados
+            reportes={reportesVisibles}
+            reporteSeleccionadoId={reporteSeleccionadoId}
+            alSeleccionar={setReporteSeleccionadoId}
+            markerRefs={markerRefs}
+            cuadrillas={cuadrillas}
+            actualizarReporte={actualizarReporte}
+            guardandoFormPopup={guardandoFormPopup}
+          />
         </MapContainer>
       </div>
 
@@ -832,47 +944,56 @@ function DashboardObras() {
                 <h3>+ Registrar Nuevo Usuario</h3>
                 <form onSubmit={manejarCrearUsuario} className="cyber-form-user">
                   {msgAdmin.texto && (
-                    <div className={`msg-admin ${msgAdmin.tipo}`}>
+                    <div className={`msg-admin ${msgAdmin.tipo}`} role={msgAdmin.tipo === 'err' ? 'alert' : 'status'}>
                       {msgAdmin.texto}
                     </div>
                   )}
 
                   <div className="field">
-                    <label>Nombre de Usuario (Login)</label>
+                    <label htmlFor="nuevo-usuario">Nombre de usuario (login)</label>
                     <input
+                      id="nuevo-usuario"
                       type="text"
                       placeholder="Ej: funcionario_vial o brigada1"
                       value={nuevoUser.usuario}
                       onChange={e => setNuevoUser({ ...nuevoUser, usuario: e.target.value })}
+                      maxLength={100}
+                      autoComplete="username"
                       required
                     />
                   </div>
 
                   <div className="field">
-                    <label>Nombre Completo</label>
+                    <label htmlFor="nuevo-nombre">Nombre completo</label>
                     <input
+                      id="nuevo-nombre"
                       type="text"
                       placeholder="Ej: Ing. Laura Gómez"
                       value={nuevoUser.nombre}
                       onChange={e => setNuevoUser({ ...nuevoUser, nombre: e.target.value })}
+                      maxLength={150}
                       required
                     />
                   </div>
 
                   <div className="field">
-                    <label>Contraseña (mínimo 6 caracteres)</label>
+                    <label htmlFor="nueva-clave">Contraseña (mínimo 8 caracteres)</label>
                     <input
+                      id="nueva-clave"
                       type="password"
                       placeholder="••••••••"
                       value={nuevoUser.clave}
                       onChange={e => setNuevoUser({ ...nuevoUser, clave: e.target.value })}
+                      minLength={8}
+                      autoComplete="new-password"
                       required
                     />
                   </div>
 
                   <div className="field">
-                    <label>Rol en el Municipio</label>
+                    <label htmlFor="nuevo-rol">Rol en el municipio</label>
                     <select
+                      id="nuevo-rol"
                       value={nuevoUser.rol}
                       onChange={e => setNuevoUser({ ...nuevoUser, rol: e.target.value })}
                     >
@@ -883,8 +1004,9 @@ function DashboardObras() {
 
                   {nuevoUser.rol === 'cuadrilla' && (
                     <div className="field">
-                      <label>Cuadrilla Asignada</label>
+                      <label htmlFor="cuadrilla-asignada">Cuadrilla asignada</label>
                       <select
+                        id="cuadrilla-asignada"
                         value={nuevoUser.cuadrilla_id}
                         onChange={e => setNuevoUser({ ...nuevoUser, cuadrilla_id: e.target.value })}
                         required={nuevoUser.rol === 'cuadrilla'}

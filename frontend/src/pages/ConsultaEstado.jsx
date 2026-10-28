@@ -17,20 +17,26 @@ const ESTADOS = [
 ];
 
 function fechaLarga(iso) {
-  if (!iso) return "";
+  if (!iso || Number.isNaN(new Date(iso).getTime())) return "Sin fecha";
   return new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
 }
 
 function hace(iso) {
-  if (!iso) return "";
-  const dias = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
-  return dias === 0 ? "hoy" : dias === 1 ? "hace 1 día" : `hace ${dias} días`;
+  if (!iso || Number.isNaN(new Date(iso).getTime())) return "Sin fecha disponible";
+  const minutos = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutos < 1) return "ahora";
+  if (minutos < 60) return `hace ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  return dias === 1 ? "hace 1 día" : `hace ${dias} días`;
 }
 
 function ConsultaEstado() {
   const { codigo, setCodigo, resultado, mensaje, cargando, manejarEnvio } = useConsulta();
 
   const indiceActual = resultado ? Math.max(0, ESTADOS.findIndex(e => e.clave === resultado.estado)) : -1;
+  const historial = resultado?.historial || [];
 
   return (
     <main className="main-consulta">
@@ -97,8 +103,9 @@ function ConsultaEstado() {
           </div>
           <ol className="pasos" aria-label="Etapas del reporte">
             {ESTADOS.map((e, i) => {
+              const evento = historial.find(item => item.estado === e.clave);
               const terminado = i === indiceActual && e.clave === "resuelto";
-              const esHecho = i < indiceActual;
+              const esHecho = Boolean(evento) && i < indiceActual;
               const esActual = i === indiceActual;
               const clases = `paso ${esHecho ? 'hecho' : ''} ${terminado ? 'hecho final' : esActual ? 'actual' : ''}`;
 
@@ -112,6 +119,11 @@ function ConsultaEstado() {
                       {e.titulo} {esActual && <span className="paso-actual-tag">ESTADO ACTUAL</span>}
                     </div>
                     {esActual && <p className="detalle">{e.detalle}</p>}
+                    {evento && (
+                      <p className="fecha-etapa">
+                        Registrado {hace(evento.fecha)}
+                      </p>
+                    )}
                   </div>
                 </li>
               );

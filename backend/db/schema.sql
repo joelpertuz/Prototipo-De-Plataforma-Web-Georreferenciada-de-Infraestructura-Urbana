@@ -20,6 +20,29 @@ CREATE TABLE cuadrillas (
     activa BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- Personal autorizado y sesiones persistentes del sistema.
+CREATE TABLE usuarios (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    usuario VARCHAR(100) UNIQUE NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    clave_hash TEXT NOT NULL,
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('funcionario', 'cuadrilla')),
+    cuadrilla_id UUID REFERENCES cuadrillas(id) ON DELETE SET NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE sesiones (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    token_hash CHAR(64) UNIQUE NOT NULL,
+    usuario_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    expira TIMESTAMPTZ NOT NULL,
+    fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_sesiones_usuario ON sesiones (usuario_id);
+CREATE INDEX idx_sesiones_expira ON sesiones (expira);
+
 -- Reportes ciudadanos (huecos, luminarias defectuosas, etc.)
 CREATE TABLE reportes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -42,6 +65,11 @@ CREATE TABLE reportes (
 CREATE INDEX idx_reportes_ubicacion ON reportes USING GIST (ubicacion);
 CREATE INDEX idx_reportes_estado ON reportes (estado);
 CREATE INDEX idx_reportes_codigo ON reportes (codigo_seguimiento);
+CREATE INDEX idx_reportes_fecha_id ON reportes (fecha_creacion, id);
+CREATE INDEX idx_reportes_cuadrilla_estado_fecha
+    ON reportes (cuadrilla_id, estado, fecha_creacion, id);
+CREATE INDEX idx_reportes_tipo_estado_fecha
+    ON reportes (tipo_dano, estado, fecha_creacion, id);
 
 -- Evidencia de cierre registrada por las cuadrillas
 CREATE TABLE evidencias (
@@ -52,6 +80,19 @@ CREATE TABLE evidencias (
     observaciones TEXT,
     fecha_cierre TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Historial de cambios de estado para el seguimiento ciudadano.
+CREATE TABLE historial_estados (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    reporte_id UUID NOT NULL REFERENCES reportes(id) ON DELETE CASCADE,
+    estado VARCHAR(20) NOT NULL
+        CHECK (estado IN ('pendiente', 'en_inspeccion', 'en_reparacion', 'resuelto')),
+    usuario_id UUID REFERENCES usuarios(id) ON DELETE SET NULL,
+    fecha TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_historial_estados_reporte_fecha
+    ON historial_estados (reporte_id, fecha);
 
 -- Ejemplo de consulta de proximidad que habilita este esquema:
 -- Reportes pendientes en un radio de 500 metros alrededor de un punto dado

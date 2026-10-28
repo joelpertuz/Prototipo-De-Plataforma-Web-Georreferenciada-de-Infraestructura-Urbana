@@ -26,12 +26,26 @@ export const api = {
   consultarReporte: (codigo) => fetch(`${API_BASE}/consulta/${encodeURIComponent(codigo)}`),
   enviarReporte: (datos) => fetch(`${API_BASE}/reportes`, { method: 'POST', body: datos }),
   
-  obtenerReportes: (cuadrillaId = '') => 
-    fetchConToken(`/reportes${cuadrillaId ? `?cuadrilla_id=${cuadrillaId}` : ''}`),
+  obtenerReportes: (filtros = {}, opciones = {}) => {
+    const parametros = new URLSearchParams();
+    if (typeof filtros === 'string') {
+      parametros.set('cuadrilla_id', filtros);
+      parametros.set('pagina', '1');
+      parametros.set('limite', '100');
+    } else {
+      if (filtros.cuadrillaId) parametros.set('cuadrilla_id', filtros.cuadrillaId);
+      if (filtros.pagina) parametros.set('pagina', String(filtros.pagina));
+      if (filtros.limite) parametros.set('limite', String(filtros.limite));
+      if (filtros.estados?.length) parametros.set('estado', filtros.estados.join(','));
+      if (filtros.tipo) parametros.set('tipo', filtros.tipo);
+      if (filtros.busqueda) parametros.set('q', filtros.busqueda);
+    }
+    return fetchConToken(`/reportes?${parametros.toString()}`, opciones);
+  },
   actualizarReporte: (id, datos) => 
     fetchConToken(`/reportes/${id}`, { method: 'PATCH', headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }),
   
-  obtenerCuadrillas: () => fetchConToken('/cuadrillas'),
+  obtenerCuadrillas: (opciones = {}) => fetchConToken('/cuadrillas', opciones),
   crearCuadrilla: (datos) => 
     fetchConToken('/cuadrillas', { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }),
   
